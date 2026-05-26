@@ -1,0 +1,385 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+#wrap{width:100%;position:relative;border-radius:10px;overflow:hidden;border:1px solid #334155;background:#0d1b2e}
+#msv{width:100%;height:650px;display:block;cursor:grab}
+#msv:active{cursor:grabbing}
+.zbtns{position:absolute;top:10px;right:10px;display:flex;flex-direction:column;gap:4px;z-index:20}
+.zbtn{width:30px;height:30px;border-radius:6px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.22);font-size:17px;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#fff;user-select:none;transition:background .15s}
+.zbtn:hover{background:rgba(255,255,255,0.25)}
+#rstbtn{position:absolute;top:10px;left:10px;z-index:20;font-size:11px;padding:5px 10px;border-radius:6px;background:rgba(255,255,255,0.13);border:1px solid rgba(255,255,255,0.22);color:#fff;cursor:pointer}
+#rstbtn:hover{background:rgba(255,255,255,0.24)}
+#zlbl{position:absolute;bottom:8px;right:10px;font-size:10px;color:rgba(255,255,255,0.45);z-index:20;pointer-events:none}
+#tip{position:absolute;display:none;background:#1e293b;border:1px solid #334155;border-radius:10px;padding:9px 13px;font-size:12px;color:#e2e8f0;max-width:240px;pointer-events:none;z-index:100;line-height:1.6;box-shadow:0 4px 18px rgba(0,0,0,.35)}
+.leg{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:8px 2px 2px;font-size:11px;color:var(--color-text-secondary)}
+.li{display:flex;align-items:center;gap:5px}
+</style>
+
+<div id="wrap">
+  <svg id="msv"></svg>
+  <div class="zbtns">
+    <button class="zbtn" id="zin" title="Acercar">+</button>
+    <button class="zbtn" id="zout" title="Alejar">−</button>
+  </div>
+  <button id="rstbtn">↺ Vista inicial</button>
+  <div id="zlbl">Zoom: 1.0×</div>
+  <div id="tip"></div>
+</div>
+
+<div class="leg">
+  <span class="li"><span style="width:15px;height:15px;border-radius:3px;background:#534AB7;display:inline-flex;align-items:center;justify-content:center;font-size:9px">🏟</span>Ciudad sede oficial (16)</span>
+  <span class="li"><span style="width:15px;height:15px;border-radius:50%;background:#166534;display:inline-flex;align-items:center;justify-content:center;font-size:8px">⚽</span>Base de entrenamiento (48 equipos)</span>
+  <span class="li"><svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,3"/></svg>Vínculo sede→ciudad</span>
+  <span class="li" style="color:var(--color-text-tertiary)">Scroll/pellizca=zoom · Arrastra=mover · Hover=detalle</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
+<script>
+const HOST = [
+  {n:"Cd. de México", s:"Estadio Azteca",          lo:-98.73, la:19.43, note:"Inauguración · Grupo A"},
+  {n:"Guadalajara",   s:"Estadio Akron",            lo:-103.35,la:20.68, note:"Grupo A"},
+  {n:"Monterrey",     s:"Estadio BBVA",             lo:-100.31,la:25.67, note:"Grupos varios"},
+  {n:"Los Ángeles",   s:"SoFi Stadium",             lo:-118.34,la:33.95, note:"Grupos + eliminatorias"},
+  {n:"San Francisco", s:"Levi's Stadium",           lo:-121.97,la:37.40, note:"Grupos + eliminatorias"},
+  {n:"Seattle",       s:"Lumen Field",              lo:-122.33,la:47.60, note:"Grupos + eliminatorias"},
+  {n:"Vancouver",     s:"BC Place",                 lo:-123.11,la:49.28, note:"Grupos + eliminatorias"},
+  {n:"Kansas City",   s:"Arrowhead Stadium",        lo:-94.48, la:39.05, note:"Grupos + eliminatorias"},
+  {n:"Dallas",        s:"AT&T Stadium",             lo:-97.09, la:32.75, note:"Grupos + eliminatorias"},
+  {n:"Houston",       s:"NRG Stadium",              lo:-95.41, la:29.69, note:"Grupos + eliminatorias"},
+  {n:"Atlanta",       s:"Mercedes-Benz Stadium",    lo:-84.40, la:33.76, note:"Semifinal"},
+  {n:"Miami",         s:"Hard Rock Stadium",        lo:-80.24, la:25.96, note:"3er lugar"},
+  {n:"Nueva York/NJ", s:"MetLife Stadium",          lo:-74.07, la:40.81, note:"⭐ Final 19 Jul"},
+  {n:"Philadelphia",  s:"Lincoln Financial Field",  lo:-75.17, la:39.90, note:"Grupos + eliminatorias"},
+  {n:"Boston",        s:"Gillette Stadium",         lo:-71.26, la:42.09, note:"Grupos + eliminatorias"},
+  {n:"Toronto",       s:"BMO Field",                lo:-79.42, la:43.63, note:"Grupos + eliminatorias"},
+];
+
+const CAMPS = [
+  {t:"México 🇲🇽",          g:"A", s:"Centro de Alto Rendimiento (CAR)", c:"Ciudad de México",         lo:-99.18, la:19.38,  hlo:-99.13,  hla:19.43},
+  {t:"Sudáfrica 🇿🇦",       g:"A", s:"CF Pachuca - Univ. del Fútbol",    c:"Pachuca MX",               lo:-98.73, la:20.12,  hlo:-99.13,  hla:19.43},
+  {t:"Corea del Sur 🇰🇷",   g:"A", s:"Chivas Verde Valle",               c:"Guadalajara MX",           lo:-103.46,la:20.21,  hlo:-103.35, hla:20.68},
+  {t:"Chequia 🇨🇿",         g:"A", s:"Mansfield Multipurpose Stadium",   c:"Mansfield TX",             lo:-97.14, la:32.57,  hlo:-97.09,  hla:32.75},
+  {t:"Canadá 🇨🇦",          g:"B", s:"National Soccer Dev. Centre",      c:"Vancouver BC",             lo:-123.05,la:49.24,  hlo:-123.11, hla:49.28},
+  {t:"Catar 🇶🇦",           g:"B", s:"Westmont College",                 c:"Santa Barbara CA",         lo:-119.71,la:34.45,  hlo:-118.34, hla:33.95},
+  {t:"Suiza 🇨🇭",           g:"B", s:"San Diego Jewish Academy (SDJA)",  c:"San Diego CA",             lo:-117.42,la:32.76,  hlo:-118.34, hla:33.95},
+  {t:"Bosnia 🇧🇦",          g:"B", s:"RSL Stadium / America First Field",c:"Sandy UT",                 lo:-111.89,la:40.58,  hlo:-94.48,  hla:39.05},
+  {t:"Brasil 🇧🇷",          g:"C", s:"Columbia Park Training Facility",  c:"Nueva York/NJ",            lo:-74.20, la:40.93,  hlo:-74.07,  hla:40.81},
+  {t:"Marruecos 🇲🇦",       g:"C", s:"The Pingry School",                c:"Nueva York/NJ",            lo:-74.48, la:40.64,  hlo:-74.07,  hla:40.81},
+  {t:"Haití 🇭🇹",           g:"C", s:"Stockton University",              c:"Galloway NJ",              lo:-74.50, la:39.48,  hlo:-74.07,  hla:40.81},
+  {t:"Escocia 🏴󠁧󠁢󠁳󠁣󠁴󠁿",     g:"C", s:"Charlotte FC Training Ground",    c:"Charlotte NC",             lo:-80.85, la:35.23,  hlo:-84.40,  hla:33.76},
+  {t:"Australia 🇦🇺",       g:"D", s:"Oakland Roots/Soul Training",      c:"Oakland CA",               lo:-122.22,la:37.80,  hlo:-121.97, hla:37.40},
+  {t:"Paraguay 🇵🇾",        g:"D", s:"Spartan Soccer Complex (SJSU)",    c:"San José CA",              lo:-121.88,la:37.33,  hlo:-121.97, hla:37.40},
+  {t:"EE.UU 🇺🇸",           g:"D", s:"Great Park Sports Complex",        c:"Irvine CA",                lo:-117.73,la:33.68,  hlo:-118.34, hla:33.95},
+  {t:"Turquía 🇹🇷",         g:"D", s:"Arizona Athletic Grounds",         c:"Mesa AZ",                  lo:-111.83,la:33.42,  hlo:-97.09,  hla:32.75},
+  {t:"Costa de Marfil 🇨🇮", g:"E", s:"Philadelphia Union Training",      c:"Philadelphia PA",          lo:-75.38, la:39.83,  hlo:-75.17,  hla:39.90},
+  {t:"Ecuador 🇪🇨",         g:"E", s:"Columbus Crew Performance Centre", c:"Columbus OH",              lo:-83.01, la:40.00,  hlo:-84.40,  hla:33.76},
+  {t:"Alemania 🇩🇪",        g:"E", s:"Wake Forest University",           c:"Winston-Salem NC",         lo:-80.27, la:36.13,  hlo:-75.17,  hla:39.90},
+  {t:"Curazao 🇨🇼",         g:"E", s:"Florida Atlantic University",      c:"Boca Raton FL",            lo:-80.10, la:26.37,  hlo:-80.24,  hla:25.96},
+  {t:"Japón 🇯🇵",           g:"F", s:"Nashville SC Training Ground",     c:"Nashville TN",             lo:-86.77, la:36.17,  hlo:-84.40,  hla:33.76},
+  {t:"Países Bajos 🇳🇱",    g:"F", s:"KC Current Training Facility",     c:"Kansas City MO",           lo:-94.07, la:39.07,  hlo:-94.48,  hla:39.05},
+  {t:"Suecia 🇸🇪",          g:"F", s:"FC Dallas Stadium",                c:"Frisco TX",                lo:-96.89, la:33.15,  hlo:-97.09,  hla:32.75},
+  {t:"Túnez 🇹🇳",           g:"F", s:"Rayados Training Centre",          c:"Monterrey MX",             lo:-100.38,la:25.73,  hlo:-100.31, hla:25.67},
+  {t:"Bélgica 🇧🇪",         g:"G", s:"Seattle Sounders FC Perf. Centre", c:"Renton WA",                lo:-122.22,la:47.48,  hlo:-122.33, hla:47.60},
+  {t:"Nueva Zelanda 🇳🇿",   g:"G", s:"Univ. of San Diego - Torero Stad.",c:"San Diego CA",             lo:-117.19,la:32.77,  hlo:-118.34, hla:33.95},
+  {t:"Irán 🇮🇷",            g:"G", s:"Centro Xoloitzcuintle",            c:"Tijuana MX",               lo:-117.00,la:32.53,  hlo:-118.34, hla:33.95},
+  {t:"Egipto 🇪🇬",          g:"G", s:"Gonzaga University",               c:"Spokane WA",               lo:-117.42,la:47.66,  hlo:-122.33, hla:47.60},
+  {t:"España 🇪🇸",          g:"H", s:"Baylor School",                    c:"Chattanooga TN",           lo:-85.31, la:35.05,  hlo:-84.40,  hla:33.76},
+  {t:"Arabia Saudita 🇸🇦",  g:"H", s:"Austin FC Stadium (Q2)",           c:"Austin TX",                lo:-97.72, la:30.39,  hlo:-97.09,  hla:32.75},
+  {t:"Uruguay 🇺🇾",         g:"H", s:"Mayakoba Training Centre",         c:"Cancún MX",                lo:-86.87, la:21.16,  hlo:-99.13,  hla:19.43},
+  {t:"Cabo Verde 🇨🇻",      g:"H", s:"Waters Sportsplex",                c:"Tampa FL",                 lo:-82.46, la:27.95,  hlo:-80.24,  hla:25.96},
+  {t:"Francia 🇫🇷",         g:"I", s:"Bentley University",               c:"Waltham MA",               lo:-71.22, la:42.39,  hlo:-71.26,  hla:42.09},
+  {t:"Senegal 🇸🇳",         g:"I", s:"Rutgers University",               c:"Piscataway NJ",            lo:-74.45, la:40.50,  hlo:-74.07,  hla:40.81},
+  {t:"Jordania 🇯🇴",        g:"I", s:"University of Portland",           c:"Portland OR",              lo:-122.68,la:45.55,  hlo:-122.33, hla:47.60},
+  {t:"Noruega 🇳🇴",         g:"I", s:"UNC Greensboro",                   c:"Greensboro NC",            lo:-79.82, la:36.07,  hlo:-75.17,  hla:39.90},
+  {t:"Argelia 🇩🇿",         g:"J", s:"University of Kansas",             c:"Lawrence KS",              lo:-95.25, la:38.96,  hlo:-94.48,  hla:39.05},
+  {t:"Argentina 🇦🇷",       g:"J", s:"Sporting KC Training Centre",      c:"Kansas City MO",           lo:-94.82, la:39.11,  hlo:-94.48,  hla:39.05},
+  {t:"Inglaterra 🏴󠁧󠁢󠁥󠁮󠁧󠁿",   g:"J", s:"Swope Soccer Village",            c:"Kansas City MO",           lo:-94.52, la:38.99,  hlo:-94.48,  hla:39.85},
+  {t:"Irak 🇮🇶",            g:"J", s:"The Greenbrier Sports Perf. Ctr.", c:"White Sulphur Springs WV", lo:-80.30, la:37.78,  hlo:-74.07,  hla:40.81},
+  {t:"Portugal 🇵🇹",        g:"K", s:"Gardens North County District Pk.",c:"Palm Beach Gardens FL",    lo:-80.10, la:26.82,  hlo:-80.24,  hla:25.96},
+  {t:"Colombia 🇨🇴",        g:"K", s:"Academia Atlas FC",                c:"Guadalajara MX",           lo:-103.92,la:20.64,  hlo:-103.35, hla:20.68},
+  {t:"Congo DR 🇨🇩",        g:"K", s:"Houston Training Centre",          c:"Houston TX",               lo:-95.38, la:29.75,  hlo:-95.41,  hla:29.69},
+  {t:"Uzbekistán 🇺🇿",      g:"K", s:"Atlanta United Training Centre",   c:"Atlanta GA",               lo:-84.42, la:33.80,  hlo:-84.40,  hla:33.76},
+  {t:"Ghana 🇬🇭",           g:"L", s:"Bryant University",                c:"Smithfield RI",            lo:-71.53, la:41.97,  hlo:-71.26,  hla:42.09},
+  {t:"Croacia 🇭🇷",         g:"L", s:"Episcopal High School",            c:"Alexandria VA",            lo:-77.07, la:38.82,  hlo:-74.07,  hla:40.81},
+  {t:"Panamá 🇵🇦",          g:"L", s:"Nottawasaga Training Site",        c:"New Tecumseth ON",         lo:-79.82, la:44.08,  hlo:-79.42,  hla:43.63},
+  {t:"Austria 🇦🇹",         g:"L", s:"UC Santa Barbara - Harder Stadium",c:"Goleta CA",                lo:-119.85,la:34.43,  hlo:-118.34, hla:33.95},
+];
+
+// ── CONFIG ─────────────────────────────────────────────────────────────────
+const W=900, H=650;
+const svg = d3.select('#msv').attr('viewBox',`0 0 ${W} ${H}`).attr('width','100%');
+const wrap = document.getElementById('wrap');
+const tip  = document.getElementById('tip');
+
+const projection = d3.geoMercator().center([-95,34]).scale(710).translate([W/2, H/2+10]);
+const pathGen = d3.geoPath().projection(projection);
+const proj = (lo,la) => projection([lo,la]);
+
+const MIN_K=1, MAX_K=14;
+let currentK = 1;
+
+const zoom = d3.zoom()
+  .scaleExtent([MIN_K, MAX_K])
+  .translateExtent([[-180,-60],[W+180,H+100]])
+  .on('zoom', onZoom);
+
+svg.call(zoom);
+svg.append('rect').attr('width',W).attr('height',H).attr('fill','#0d1b2e').attr('rx',8);
+const gMap = svg.append('g').attr('id','gmap');
+
+function showTip(e,html){
+  tip.innerHTML=html; tip.style.display='block';
+  const r=wrap.getBoundingClientRect();
+  let x=e.clientX-r.left+14, y=e.clientY-r.top-10;
+  if(x+245>r.width) x=e.clientX-r.left-248;
+  tip.style.left=x+'px'; tip.style.top=Math.max(4,y)+'px';
+}
+function hideTip(){ tip.style.display='none'; }
+
+// Build a label-offset layout per host city
+// offsets: array of {dx,dy} for each camp slot around the host
+function ringOffsets(n, baseR){
+  const offsets=[];
+  for(let i=0;i<n;i++){
+    const angle = (i/n)*2*Math.PI - Math.PI/2;
+    offsets.push({dx:Math.cos(angle)*baseR, dy:Math.sin(angle)*baseR});
+  }
+  return offsets;
+}
+
+d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world=>{
+  const countries = topojson.feature(world, world.objects.countries);
+
+  // Country colors: Canada = red tint, USA = blue tint, Mexico = green tint
+  const colorMap = {
+    '840':'#1a3358',   // USA – dark blue
+    '484':'#173320',   // Mexico – dark green
+    '124':'#4a1020',   // Canada – dark red
+  };
+
+  gMap.selectAll('path.land')
+    .data(countries.features)
+    .join('path').attr('class','land')
+    .attr('d',pathGen)
+    .attr('fill',d=>colorMap[String(d.id)]||'#1c2333')
+    .attr('stroke','#334155').attr('stroke-width',0.5);
+
+  // ── LINES ─────────────────────────────────────────────────────────────
+  CAMPS.forEach(tc=>{
+    const p1=proj(tc.lo,tc.la), p2=proj(tc.hlo,tc.hla);
+    if(!p1||!p2||isNaN(p1[0])||isNaN(p2[0])) return;
+    if(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])<5) return;
+    gMap.append('line')
+      .attr('x1',p1[0]).attr('y1',p1[1]).attr('x2',p2[0]).attr('y2',p2[1])
+      .attr('stroke','#4b6080').attr('stroke-width',0.8)
+      .attr('stroke-dasharray','4,3').attr('opacity',0.45);
+  });
+
+  // ── CAMP MARKERS & LABELS ─────────────────────────────────────────────
+  // Group camps by host city to distribute labels around host
+  const campsByHost = {};
+  CAMPS.forEach(tc=>{
+    const key = `${tc.hlo},${tc.hla}`;
+    if(!campsByHost[key]) campsByHost[key]=[];
+    campsByHost[key].push(tc);
+  });
+
+  CAMPS.forEach(tc=>{
+    const p=proj(tc.lo,tc.la);
+    if(!p||isNaN(p[0])) return;
+    const cg = gMap.append('g').datum(tc).attr('class','camp-g')
+      .attr('transform',`translate(${p[0]},${p[1]})`).attr('cursor','pointer')
+      .on('mousemove',e=>showTip(e,
+        `<strong style="font-size:13px">${tc.t}</strong>
+         <span style="background:#166534;color:#fff;border-radius:3px;padding:1px 6px;font-size:10px;margin-left:4px">Grupo ${tc.g}</span><br>
+         <b style="font-size:11px">${tc.s}</b><br>
+         <span style="font-size:11px;color:#94a3b8">${tc.c}</span>`))
+      .on('mouseleave',hideTip);
+
+    cg.append('circle').attr('class','camp-circ').attr('r',5.5)
+      .attr('fill','#166534').attr('stroke','#4ade80').attr('stroke-width',1.1);
+    cg.append('text').attr('class','camp-emoji')
+      .attr('text-anchor','middle').attr('dominant-baseline','central')
+      .attr('font-size',6.5).attr('fill','#fff').attr('pointer-events','none').text('⚽');
+
+    // Labels appear at zoom ≥ 2.5, positioned to avoid overlap
+    const lg = cg.append('g').attr('class','camp-label').attr('display','none');
+    // Determine label side based on position relative to host
+    const hp=proj(tc.hlo,tc.hla);
+    const dx=p[0]-hp[0], dy=p[1]-hp[1];
+    const dist=Math.hypot(dx,dy);
+    let lx=8, ly=-4, anchor='start';
+    if(dist>3){
+      // place label away from host
+      const nx=dx/Math.max(dist,1), ny=dy/Math.max(dist,1);
+      lx=nx*14+6; ly=ny*14-4;
+      anchor = nx<-0.2?'end':'start';
+    }
+    lg.append('text').attr('x',lx).attr('y',ly)
+      .attr('text-anchor',anchor).attr('font-size',7.5)
+      .attr('fill','#a5f3fc').attr('font-weight','500').text(tc.t);
+    lg.append('text').attr('x',lx).attr('y',ly+9)
+      .attr('text-anchor',anchor).attr('font-size',6.5)
+      .attr('fill','#7dd3fc').text(`Gr.${tc.g} · ${tc.c}`);
+  });
+
+  // ── HOST MARKERS & LABELS ─────────────────────────────────────────────
+  HOST.forEach(hc=>{
+    const p=proj(hc.lo,hc.la);
+    if(!p||isNaN(p[0])) return;
+
+    const hg = gMap.append('g').datum(hc).attr('class','host-g')
+      .attr('transform',`translate(${p[0]},${p[1]})`).attr('cursor','pointer')
+      .on('mousemove',e=>showTip(e,
+        `<strong style="font-size:13px">${hc.n}</strong><br>
+         <span style="color:#94a3b8;font-size:12px">${hc.s}</span><br>
+         <span style="font-size:11px;color:${hc.note.includes('Final')?'#f59e0b':'#94a3b8'}">${hc.note}</span>`))
+      .on('mouseleave',hideTip);
+
+    hg.append('rect').attr('class','host-rect')
+      .attr('x',-9).attr('y',-9).attr('width',18).attr('height',18).attr('rx',3)
+      .attr('fill','#534AB7').attr('stroke','#a5b4fc').attr('stroke-width',1.3);
+    hg.append('text').attr('class','host-emoji')
+      .attr('text-anchor','middle').attr('dominant-baseline','central')
+      .attr('font-size',11).attr('pointer-events','none').text('🏟');
+
+    // Smart label placement
+    const westSet=new Set(['Los Ángeles','San Francisco','Seattle','Vancouver']);
+    const anchor=westSet.has(hc.n)?'end':'start';
+    const lx=westSet.has(hc.n)?-12:12;
+    let ly=-3;
+    if(hc.n==='Houston') ly=9;
+    if(hc.n==='Monterrey') ly=10;
+    if(hc.n==='Miami') ly=-14;
+    if(hc.n==='Dallas') ly=-12;
+
+    const lg=hg.append('g').attr('class','host-label');
+    lg.append('text').attr('x',lx).attr('y',ly)
+      .attr('text-anchor',anchor).attr('font-size',9.5).attr('font-weight','700')
+      .attr('fill','#f1f5f9').text(hc.n);
+    lg.append('text').attr('x',lx).attr('y',ly+11)
+      .attr('text-anchor',anchor).attr('font-size',7.5).attr('fill','#94a3b8').text(hc.s);
+    if(hc.note.includes('Final')){
+      lg.append('text').attr('x',lx).attr('y',ly+22)
+        .attr('text-anchor',anchor).attr('font-size',8).attr('fill','#f59e0b').text('⭐ Final 19 Jul');
+    }
+  });
+
+  // ── COUNTRY LABELS ────────────────────────────────────────────────────
+  // Canada label — inside Canadian territory (around Manitoba/Ontario)
+  gMap.append('text').attr('class','country-label').attr('x',310).attr('y',70)
+    .attr('text-anchor','middle').attr('font-size',16).attr('font-weight','300')
+    .attr('fill','rgba(255,120,100,0.22)').attr('letter-spacing',5)
+    .attr('pointer-events','none').text('C  A  N  A  D  Á');
+
+  // Mexico label — Chihuahua/Sonora area
+  gMap.append('text').attr('class','country-label').attr('x',320).attr('y',425)
+    .attr('text-anchor','middle').attr('font-size',13).attr('font-weight','300')
+    .attr('fill','rgba(100,220,100,0.20)').attr('letter-spacing',4)
+    .attr('pointer-events','none').text('M É X I C O');
+
+  // USA label
+  gMap.append('text').attr('class','country-label').attr('x',370).attr('y',170)
+    .attr('text-anchor','middle').attr('font-size',16).attr('font-weight','300')
+    .attr('fill','rgba(100,160,255,0.15)').attr('letter-spacing',5)
+    .attr('pointer-events','none').text('E S T A D O S   U N I D O S');
+
+  // ── LEGEND BOXES (country colors) ────────────────────────────────────
+  const legItems = [
+    {c:'#4a1020', border:'#ef4444', label:'Canadá'},
+    {c:'#1a3358', border:'#60a5fa', label:'EE.UU'},
+    {c:'#173320', border:'#4ade80', label:'México'},
+  ];
+  legItems.forEach((l,i)=>{
+    svg.append('rect').attr('x',14).attr('y',12+i*18).attr('width',13).attr('height',13)
+      .attr('rx',2).attr('fill',l.c).attr('stroke',l.border).attr('stroke-width',0.8);
+    svg.append('text').attr('x',31).attr('y',22+i*18).attr('font-size',10.5)
+      .attr('fill','rgba(255,255,255,0.65)').text(l.label);
+  });
+
+  // ── TITLE BLOCK ───────────────────────────────────────────────────────
+  // Title
+  svg.append('text').attr('x',W/2).attr('y',18)
+    .attr('text-anchor','middle').attr('font-size',13.5).attr('font-weight','700')
+    .attr('fill','rgba(255,255,255,0.88)')
+    .text('FIFA World Cup 2026™ — Norteamérica · Sedes y Bases de Entrenamiento');
+
+  // Author
+  svg.append('text').attr('x',W/2).attr('y',33)
+    .attr('text-anchor','middle').attr('font-size',10).attr('font-weight','400')
+    .attr('fill','rgba(165,180,202,0.75)')
+    .text('Por Rodolfo Gerardo Ortiz Morales');
+
+  // Made with Claude
+  svg.append('text').attr('x',W/2).attr('y',46)
+    .attr('text-anchor','middle').attr('font-size',9).attr('font-style','italic')
+    .attr('fill','rgba(124,145,175,0.60)')
+    .text('Realizado con Claude.ai');
+
+  // Data source
+  svg.append('text').attr('x',W/2).attr('y',H-6)
+    .attr('text-anchor','middle').attr('font-size',8.5)
+    .attr('fill','rgba(100,120,150,0.70)')
+    .text('Fuente de datos: FIFA.com/es/tournaments/mens/worldcup/canadamexicousa2026 · inside.fifa.com · © FIFA 2026');
+
+}).catch(e=>{
+  svg.append('text').attr('x',20).attr('y',40).attr('fill','#aaa').text('Error: '+e.message);
+});
+
+// ── ZOOM HANDLER ──────────────────────────────────────────────────────────
+function onZoom(event){
+  const t=event.transform;
+  gMap.attr('transform',t);
+  currentK=t.k;
+  document.getElementById('zlbl').textContent='Zoom: '+currentK.toFixed(1)+'×';
+
+  const ms=Math.max(0.35, 1/Math.sqrt(currentK));
+
+  // Scale camp markers
+  gMap.selectAll('.camp-g').each(function(){
+    const g=d3.select(this);
+    g.select('.camp-circ').attr('r',5.5*ms);
+    g.select('.camp-emoji').attr('font-size',6.5*ms);
+  });
+
+  // Scale host markers
+  gMap.selectAll('.host-g').each(function(){
+    const g=d3.select(this);
+    const sz=18*ms;
+    g.select('.host-rect').attr('x',-sz/2).attr('y',-sz/2).attr('width',sz).attr('height',sz).attr('rx',3*ms);
+    g.select('.host-emoji').attr('font-size',11*ms);
+  });
+
+  // Scale host labels inversely
+  gMap.selectAll('.host-label').each(function(){
+    d3.select(this).selectAll('text').style('font-size', function(){
+      const base=parseFloat(d3.select(this).attr('font-size')||9);
+      return (base*ms)+'px';
+    });
+  });
+
+  // Camp labels: show at zoom ≥ 2.5
+  gMap.selectAll('.camp-label').attr('display', currentK>=2.5?'block':'none');
+  if(currentK>=2.5){
+    gMap.selectAll('.camp-label').each(function(){
+      d3.select(this).selectAll('text').style('font-size', function(){
+        const base=parseFloat(d3.select(this).attr('font-size')||7);
+        return Math.max(5,base*ms)+'px';
+      });
+    });
+  }
+
+  // Scale country labels inversely so they stay readable but subtle
+  gMap.selectAll('.country-label')
+    .attr('font-size', function(){
+      const base=this.id==='can'?16:13;
+      return Math.max(8, (this.getAttribute('font-size')||14)*ms);
+    });
+}
+
+// ── BUTTONS ───────────────────────────────────────────────────────────────
+document.getElementById('zin').onclick  = ()=>svg.transition().duration(280).call(zoom.scaleBy,1.7);
+document.getElementById('zout').onclick = ()=>svg.transition().duration(280).call(zoom.scaleBy,1/1.7);
+document.getElementById('rstbtn').onclick = ()=>svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity);
+</script>
