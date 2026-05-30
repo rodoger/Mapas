@@ -6,176 +6,188 @@
 <meta name="description" content="FIFA World Cup 2026 - Mapa de sedes y bases de entrenamiento en Norteamérica">
 <title>FIFA World Cup 2026™ — Mapa Norteamérica</title>
 <style>
-  /* ── RESET & BASE ─────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
   html, body {
-    width: 100%;
-    min-height: 100vh;
+    width: 100%; min-height: 100vh;
     background: #060f1e;
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    color: #e2e8f0;
-    overflow-x: hidden;
+    color: #e2e8f0; overflow-x: hidden;
   }
 
-  /* ── PAGE LAYOUT ──────────────────────────────────────────────── */
   .page {
-    display: flex;
-    flex-direction: column;
-    min-height: 100vh;
-    padding: 12px;
-    gap: 10px;
-    max-width: 1400px;
+    display: flex; flex-direction: column; min-height: 100vh;
+    padding: 12px; gap: 10px; max-width: 1400px; margin: 0 auto;
+  }
+
+  /* HEADER */
+  .header { text-align: center; padding: 10px 8px 6px; }
+  .header h1 {
+    font-size: clamp(13px, 2.2vw, 20px); font-weight: 700;
+    color: rgba(255,255,255,0.90); line-height: 1.3;
+  }
+  .header .author { font-size: clamp(10px,1.5vw,13px); color: rgba(165,180,202,0.80); margin-top:3px; }
+  .header .made-with { font-size: clamp(9px,1.2vw,11px); font-style:italic; color:rgba(124,145,175,0.65); margin-top:2px; }
+
+  /* ── BUSCADOR ──────────────────────────────────────────────────── */
+  .search-wrap {
+    position: relative;
+    width: 100%;
+    max-width: 560px;
     margin: 0 auto;
   }
-
-  /* ── HEADER ───────────────────────────────────────────────────── */
-  .header {
-    text-align: center;
-    padding: 10px 8px 6px;
+  .search-icon {
+    position: absolute; left: 12px; top: 50%; transform: translateY(-50%);
+    font-size: 15px; pointer-events: none; opacity: 0.55;
   }
-  .header h1 {
-    font-size: clamp(13px, 2.2vw, 20px);
-    font-weight: 700;
-    color: rgba(255,255,255,0.90);
-    line-height: 1.3;
-    letter-spacing: 0.01em;
-  }
-  .header .author {
-    font-size: clamp(10px, 1.5vw, 13px);
-    color: rgba(165,180,202,0.80);
-    margin-top: 3px;
-  }
-  .header .made-with {
-    font-size: clamp(9px, 1.2vw, 11px);
-    font-style: italic;
-    color: rgba(124,145,175,0.65);
-    margin-top: 2px;
-  }
-
-  /* ── MAP CONTAINER ────────────────────────────────────────────── */
-  #wrap {
-    position: relative;
-    border-radius: 12px;
-    overflow: hidden;
-    border: 1px solid #1e3a5f;
-    background: #0d1b2e;
-    flex: 1;
-    min-height: 0;
-  }
-
-  #msv {
-    display: block;
+  #searchInput {
     width: 100%;
-    /* Height adapts: tall on desktop, shorter on mobile */
+    padding: 10px 36px 10px 36px;
+    background: #0f2140;
+    border: 1px solid #1e3a5f;
+    border-radius: 10px;
+    color: #e2e8f0;
+    font-size: clamp(13px, 1.8vw, 15px);
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  #searchInput::placeholder { color: #4b6080; }
+  #searchInput:focus {
+    border-color: #534AB7;
+    box-shadow: 0 0 0 3px rgba(83,74,183,0.25);
+  }
+  #clearBtn {
+    position: absolute; right: 10px; top: 50%; transform: translateY(-50%);
+    background: none; border: none; color: #4b6080; font-size: 17px;
+    cursor: pointer; display: none; padding: 2px 4px; line-height: 1;
+  }
+  #clearBtn:hover { color: #94a3b8; }
+
+  /* Results dropdown */
+  #searchResults {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: #0f2140; border: 1px solid #1e3a5f; border-radius: 10px;
+    max-height: 320px; overflow-y: auto; z-index: 200;
+    box-shadow: 0 8px 32px rgba(0,0,0,.5);
+    display: none;
+  }
+  #searchResults::-webkit-scrollbar { width: 5px; }
+  #searchResults::-webkit-scrollbar-track { background: transparent; }
+  #searchResults::-webkit-scrollbar-thumb { background: #1e3a5f; border-radius: 3px; }
+
+  .sr-group-title {
+    padding: 8px 12px 4px;
+    font-size: 10px; font-weight: 700; letter-spacing: 0.08em;
+    color: #4b6080; text-transform: uppercase;
+    border-top: 1px solid #1e3a5f;
+  }
+  .sr-group-title:first-child { border-top: none; }
+
+  .sr-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 9px 14px; cursor: pointer;
+    transition: background .12s;
+    border-radius: 0;
+  }
+  .sr-item:hover, .sr-item.active { background: rgba(83,74,183,0.25); }
+  .sr-item:last-child { border-radius: 0 0 10px 10px; }
+
+  .sr-badge {
+    flex-shrink: 0; width: 22px; height: 22px; border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .sr-badge.host  { background: #534AB7; }
+  .sr-badge.camp  { background: #166534; border-radius: 50%; }
+
+  .sr-text { display: flex; flex-direction: column; min-width: 0; }
+  .sr-main { font-size: 13px; font-weight: 500; color: #e2e8f0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sr-sub  { font-size: 11px; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .sr-group-badge {
+    margin-left: auto; flex-shrink: 0;
+    font-size: 10px; padding: 1px 6px; border-radius: 4px;
+    background: #166534; color: #fff; font-weight: 600;
+  }
+
+  .sr-empty {
+    padding: 18px; text-align: center;
+    font-size: 13px; color: #4b6080;
+  }
+
+  /* Highlight matched text */
+  .hl { color: #a5f3fc; font-weight: 700; }
+
+  /* MAP */
+  #wrap {
+    position: relative; border-radius: 12px; overflow: hidden;
+    border: 1px solid #1e3a5f; background: #0d1b2e; flex: 1; min-height: 0;
+  }
+  #msv {
+    display: block; width: 100%;
     height: clamp(320px, 60vw, 700px);
-    cursor: grab;
-    touch-action: none; /* allow d3 zoom on touch */
+    cursor: grab; touch-action: none;
   }
   #msv:active { cursor: grabbing; }
 
-  /* ── ZOOM BUTTONS ─────────────────────────────────────────────── */
+  /* Highlight pulse on map */
+  @keyframes pulse {
+    0%   { r: 12; opacity: 1; }
+    70%  { r: 28; opacity: 0; }
+    100% { r: 28; opacity: 0; }
+  }
+  .pulse-ring { animation: pulse 1.2s ease-out 3; }
+
   .zbtns {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    z-index: 20;
+    position: absolute; top: 10px; right: 10px;
+    display: flex; flex-direction: column; gap: 4px; z-index: 20;
   }
   .zbtn {
-    width: clamp(28px, 4vw, 34px);
-    height: clamp(28px, 4vw, 34px);
-    border-radius: 7px;
-    background: rgba(255,255,255,0.13);
+    width: clamp(28px,4vw,34px); height: clamp(28px,4vw,34px);
+    border-radius: 7px; background: rgba(255,255,255,0.13);
     border: 1px solid rgba(255,255,255,0.22);
-    font-size: clamp(15px, 2vw, 19px);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    color: #fff;
-    user-select: none;
-    transition: background .15s;
+    font-size: clamp(15px,2vw,19px);
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; color: #fff; user-select: none; transition: background .15s;
     -webkit-tap-highlight-color: transparent;
   }
   .zbtn:hover, .zbtn:active { background: rgba(255,255,255,0.26); }
 
-  /* ── RESET BUTTON ─────────────────────────────────────────────── */
   #rstbtn {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    z-index: 20;
-    font-size: clamp(10px, 1.4vw, 12px);
-    padding: 5px 10px;
-    border-radius: 7px;
-    background: rgba(255,255,255,0.13);
-    border: 1px solid rgba(255,255,255,0.22);
-    color: #fff;
-    cursor: pointer;
-    -webkit-tap-highlight-color: transparent;
-    transition: background .15s;
+    position: absolute; top: 10px; left: 10px; z-index: 20;
+    font-size: clamp(10px,1.4vw,12px); padding: 5px 10px; border-radius: 7px;
+    background: rgba(255,255,255,0.13); border: 1px solid rgba(255,255,255,0.22);
+    color: #fff; cursor: pointer; -webkit-tap-highlight-color: transparent; transition: background .15s;
   }
   #rstbtn:hover, #rstbtn:active { background: rgba(255,255,255,0.24); }
 
-  /* ── ZOOM LABEL ───────────────────────────────────────────────── */
   #zlbl {
-    position: absolute;
-    bottom: 8px;
-    right: 10px;
-    font-size: 10px;
-    color: rgba(255,255,255,0.40);
-    z-index: 20;
-    pointer-events: none;
+    position: absolute; bottom: 8px; right: 10px;
+    font-size: 10px; color: rgba(255,255,255,0.40); z-index: 20; pointer-events: none;
   }
-
-  /* ── TOOLTIP ──────────────────────────────────────────────────── */
   #tip {
-    position: absolute;
-    display: none;
-    background: #1e293b;
-    border: 1px solid #334155;
-    border-radius: 10px;
-    padding: 9px 13px;
-    font-size: clamp(11px, 1.5vw, 13px);
-    color: #e2e8f0;
-    max-width: min(240px, 70vw);
-    pointer-events: none;
-    z-index: 100;
-    line-height: 1.6;
-    box-shadow: 0 4px 20px rgba(0,0,0,.4);
+    position: absolute; display: none;
+    background: #1e293b; border: 1px solid #334155; border-radius: 10px;
+    padding: 9px 13px; font-size: clamp(11px,1.5vw,13px); color: #e2e8f0;
+    max-width: min(240px,70vw); pointer-events: none; z-index: 100;
+    line-height: 1.6; box-shadow: 0 4px 20px rgba(0,0,0,.4);
   }
 
-  /* ── LEGEND ───────────────────────────────────────────────────── */
   .leg {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px 16px;
-    align-items: center;
-    padding: 8px 4px 2px;
-    font-size: clamp(10px, 1.4vw, 12px);
-    color: #94a3b8;
+    display: flex; flex-wrap: wrap; gap: 10px 16px; align-items: center;
+    padding: 8px 4px 2px; font-size: clamp(10px,1.4vw,12px); color: #94a3b8;
   }
   .li { display: flex; align-items: center; gap: 5px; }
 
-  /* ── FOOTER ───────────────────────────────────────────────────── */
   .footer {
-    text-align: center;
-    font-size: clamp(8px, 1.1vw, 10px);
-    color: rgba(100,120,150,0.70);
-    padding-bottom: 6px;
-    line-height: 1.5;
+    text-align: center; font-size: clamp(8px,1.1vw,10px);
+    color: rgba(100,120,150,0.70); padding-bottom: 6px; line-height: 1.5;
   }
 
-  /* ── MOBILE OVERRIDES ─────────────────────────────────────────── */
   @media (max-width: 480px) {
     .page { padding: 8px; gap: 7px; }
     #msv { height: 58vw; min-height: 280px; }
     .leg { gap: 7px 12px; }
   }
-
   @media (min-width: 900px) {
     #msv { height: min(72vh, 680px); }
   }
@@ -191,6 +203,14 @@
     <div class="made-with">Realizado con Claude.ai</div>
   </div>
 
+  <!-- BUSCADOR -->
+  <div class="search-wrap">
+    <span class="search-icon">🔍</span>
+    <input id="searchInput" type="text" placeholder="Busca equipo, estadio, sede de entrenamiento, ciudad…" autocomplete="off" spellcheck="false">
+    <button id="clearBtn" title="Limpiar">✕</button>
+    <div id="searchResults"></div>
+  </div>
+
   <!-- MAP -->
   <div id="wrap">
     <svg id="msv"></svg>
@@ -199,7 +219,7 @@
       <button class="zbtn" id="zout" title="Alejar">−</button>
     </div>
     <button id="rstbtn">↺ Inicio</button>
-	  <table border="0" width="100%">
+	    <table border="0" width="100%">
   <tr>
     <td width="5%"></td>
     <td>Para este Mundial de Fútbol, que se realizará en México, Estados Unidos y Canadá, habrá 16 sedes oficiales para los partidos; sin embargo, también existirán 25 sedes adicionales destinadas a los campamentos base. Es decir, este Mundial se desarrollará directamente, en términos deportivos, en 41 lugares de Norteamérica, como se puede observar en el mapa.</td>
@@ -224,27 +244,20 @@
       <svg width="24" height="10"><line x1="0" y1="5" x2="24" y2="5" stroke="#94a3b8" stroke-width="1.2" stroke-dasharray="4,3"/></svg>
       Vínculo sede→ciudad
     </span>
-    <span class="li" style="color:#64748b">
-      Scroll · Pellizca · Arrastra · Toca para detalle
-    </span>
+    <span class="li" style="color:#64748b">Scroll · Pellizca · Arrastra · Toca para detalle</span>
   </div>
-
-  <!-- COUNTRY LEGEND -->
   <div class="leg" style="gap:8px 20px;">
     <span class="li"><span style="width:13px;height:13px;border-radius:2px;background:#4a1020;border:1px solid #ef4444;display:inline-block"></span> Canadá</span>
     <span class="li"><span style="width:13px;height:13px;border-radius:2px;background:#1a3358;border:1px solid #60a5fa;display:inline-block"></span> EE.UU</span>
     <span class="li"><span style="width:13px;height:13px;border-radius:2px;background:#173320;border:1px solid #4ade80;display:inline-block"></span> México</span>
-    <span class="li" style="color:#64748b;margin-left:auto">Acerca el zoom para ver nombres de campamentos</span>
+    <span class="li" style="color:#64748b;margin-left:auto">Zoom ≥ 2.5× muestra nombres de campamentos</span>
   </div>
 
-  <!-- FOOTER -->
   <div class="footer">
     Fuente: FIFA.com/es/tournaments/mens/worldcup/canadamexicousa2026 · inside.fifa.com · © FIFA 2026
   </div>
+</div>
 
-</div><!-- /page -->
-
-<!-- ── SCRIPTS ──────────────────────────────────────────────────────────── -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/7.8.5/d3.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/topojson/3.0.2/topojson.min.js"></script>
 <script>
@@ -319,238 +332,399 @@ const CAMPS = [
   {t:"Austria 🇦🇹",          g:"L", s:"UC Santa Barbara - Harder Stadium",c:"Goleta CA",                lo:-119.85,la:34.43,  hlo:-118.34, hla:33.95},
 ];
 
-// ── INIT ──────────────────────────────────────────────────────────────────
-const W = 900, H = 650;
+// ── MAP SETUP ─────────────────────────────────────────────────────────────
+const W=900, H=650;
 const svgEl = document.getElementById('msv');
 const wrap  = document.getElementById('wrap');
 const tip   = document.getElementById('tip');
 
 const svg = d3.select('#msv')
-  .attr('viewBox', `0 0 ${W} ${H}`)
-  .attr('preserveAspectRatio', 'xMidYMid meet')
-  .attr('width', '100%');
+  .attr('viewBox',`0 0 ${W} ${H}`)
+  .attr('preserveAspectRatio','xMidYMid meet')
+  .attr('width','100%');
 
-const projection = d3.geoMercator()
-  .center([-95, 34])
-  .scale(710)
-  .translate([W/2, H/2 + 10]);
-
+const projection = d3.geoMercator().center([-95,34]).scale(710).translate([W/2, H/2+10]);
 const pathGen = d3.geoPath().projection(projection);
-const proj = (lo, la) => projection([lo, la]);
+const proj = (lo,la) => projection([lo,la]);
 
-const MIN_K = 1, MAX_K = 14;
 let currentK = 1;
-
 const zoom = d3.zoom()
-  .scaleExtent([MIN_K, MAX_K])
-  .translateExtent([[-180, -60], [W + 180, H + 100]])
+  .scaleExtent([1, 14])
+  .translateExtent([[-180,-60],[W+180,H+100]])
   .on('zoom', onZoom);
 
 svg.call(zoom);
-
-// Background ocean
-svg.append('rect').attr('width', W).attr('height', H).attr('fill', '#0d1b2e').attr('rx', 8);
-const gMap = svg.append('g').attr('id', 'gmap');
+svg.append('rect').attr('width',W).attr('height',H).attr('fill','#0d1b2e').attr('rx',8);
+const gMap = svg.append('g').attr('id','gmap');
+let pulseEl = null;
 
 // ── TOOLTIP ───────────────────────────────────────────────────────────────
 function showTip(e, html) {
-  tip.innerHTML = html;
-  tip.style.display = 'block';
+  tip.innerHTML = html; tip.style.display = 'block';
   const r = wrap.getBoundingClientRect();
-  // Support both mouse and touch
   const cx = e.touches ? e.touches[0].clientX : e.clientX;
   const cy = e.touches ? e.touches[0].clientY : e.clientY;
-  let x = cx - r.left + 14;
-  let y = cy - r.top - 10;
+  let x = cx - r.left + 14, y = cy - r.top - 10;
   if (x + 248 > r.width) x = cx - r.left - 252;
-  tip.style.left  = x + 'px';
-  tip.style.top   = Math.max(4, y) + 'px';
+  tip.style.left = x+'px'; tip.style.top = Math.max(4,y)+'px';
 }
-function hideTip() { tip.style.display = 'none'; }
+function hideTip() { tip.style.display='none'; }
 
 // ── LOAD MAP ──────────────────────────────────────────────────────────────
 d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(world => {
   const countries = topojson.feature(world, world.objects.countries);
-  const colorMap = {
-    '840': '#1a3358',  // USA
-    '484': '#173320',  // Mexico
-    '124': '#4a1020',  // Canada
-  };
+  const colorMap = {'840':'#1a3358','484':'#173320','124':'#4a1020'};
 
   gMap.selectAll('path.land')
-    .data(countries.features)
-    .join('path').attr('class', 'land')
-    .attr('d', pathGen)
-    .attr('fill', d => colorMap[String(d.id)] || '#1c2333')
-    .attr('stroke', '#334155')
-    .attr('stroke-width', 0.5);
+    .data(countries.features).join('path').attr('class','land')
+    .attr('d',pathGen)
+    .attr('fill',d=>colorMap[String(d.id)]||'#1c2333')
+    .attr('stroke','#334155').attr('stroke-width',0.5);
 
-  // ── DASHED LINES camp→host ─────────────────────────────────────────────
-  CAMPS.forEach(tc => {
-    const p1 = proj(tc.lo, tc.la), p2 = proj(tc.hlo, tc.hla);
-    if (!p1 || !p2 || isNaN(p1[0]) || isNaN(p2[0])) return;
-    if (Math.hypot(p2[0]-p1[0], p2[1]-p1[1]) < 5) return;
-    gMap.append('line')
-      .attr('x1', p1[0]).attr('y1', p1[1])
-      .attr('x2', p2[0]).attr('y2', p2[1])
-      .attr('stroke', '#4b6080').attr('stroke-width', 0.8)
-      .attr('stroke-dasharray', '4,3').attr('opacity', 0.45);
+  // Lines
+  CAMPS.forEach(tc=>{
+    const p1=proj(tc.lo,tc.la), p2=proj(tc.hlo,tc.hla);
+    if(!p1||!p2||isNaN(p1[0])||isNaN(p2[0])) return;
+    if(Math.hypot(p2[0]-p1[0],p2[1]-p1[1])<5) return;
+    gMap.append('line').attr('class','camp-line')
+      .attr('x1',p1[0]).attr('y1',p1[1]).attr('x2',p2[0]).attr('y2',p2[1])
+      .attr('stroke','#4b6080').attr('stroke-width',0.8)
+      .attr('stroke-dasharray','4,3').attr('opacity',0.45);
   });
 
-  // ── CAMP MARKERS ──────────────────────────────────────────────────────
-  CAMPS.forEach(tc => {
-    const p = proj(tc.lo, tc.la);
-    if (!p || isNaN(p[0])) return;
-
-    const cg = gMap.append('g').datum(tc).attr('class', 'camp-g')
-      .attr('transform', `translate(${p[0]},${p[1]})`)
-      .attr('cursor', 'pointer');
-
-    const tipHtml = `
-      <strong style="font-size:13px">${tc.t}</strong>
+  // Camp markers
+  CAMPS.forEach(tc=>{
+    const p=proj(tc.lo,tc.la);
+    if(!p||isNaN(p[0])) return;
+    const tipHtml=`<strong style="font-size:13px">${tc.t}</strong>
       <span style="background:#166534;color:#fff;border-radius:3px;padding:1px 6px;font-size:10px;margin-left:4px">Grupo ${tc.g}</span><br>
       <b style="font-size:11px">${tc.s}</b><br>
       <span style="font-size:11px;color:#94a3b8">${tc.c}</span>`;
 
-    cg.on('mousemove', e => showTip(e, tipHtml))
-      .on('touchstart', e => { e.stopPropagation(); showTip(e, tipHtml); }, {passive:true})
-      .on('mouseleave touchend', hideTip);
+    const cg = gMap.append('g').datum({type:'camp',data:tc})
+      .attr('class','camp-g').attr('data-id', tc.t)
+      .attr('transform',`translate(${p[0]},${p[1]})`).attr('cursor','pointer')
+      .on('mousemove',e=>showTip(e,tipHtml))
+      .on('touchstart',e=>{e.stopPropagation();showTip(e,tipHtml);},{passive:true})
+      .on('mouseleave touchend',hideTip);
 
-    cg.append('circle').attr('class', 'camp-circ').attr('r', 5.5)
-      .attr('fill', '#166534').attr('stroke', '#4ade80').attr('stroke-width', 1.1);
-    cg.append('text').attr('class', 'camp-emoji')
-      .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
-      .attr('font-size', 6.5).attr('fill', '#fff').attr('pointer-events', 'none').text('⚽');
+    cg.append('circle').attr('class','camp-circ').attr('r',5.5)
+      .attr('fill','#166534').attr('stroke','#4ade80').attr('stroke-width',1.1);
+    cg.append('text').attr('class','camp-emoji')
+      .attr('text-anchor','middle').attr('dominant-baseline','central')
+      .attr('font-size',6.5).attr('fill','#fff').attr('pointer-events','none').text('⚽');
 
-    // Label (hidden until zoom ≥ 2.5)
-    const hp = proj(tc.hlo, tc.hla);
-    const dx = p[0]-hp[0], dy = p[1]-hp[1];
-    const dist = Math.hypot(dx, dy);
-    let lx = 8, ly = -4, anchor = 'start';
-    if (dist > 3) {
-      const nx = dx/Math.max(dist,1), ny = dy/Math.max(dist,1);
-      lx = nx*14 + 6; ly = ny*14 - 4;
-      anchor = nx < -0.2 ? 'end' : 'start';
+    const hp=proj(tc.hlo,tc.hla);
+    const dx=p[0]-hp[0], dy=p[1]-hp[1], dist=Math.hypot(dx,dy);
+    let lx=8, ly=-4, anchor='start';
+    if(dist>3){
+      const nx=dx/Math.max(dist,1), ny=dy/Math.max(dist,1);
+      lx=nx*14+6; ly=ny*14-4;
+      anchor=nx<-0.2?'end':'start';
     }
-    const lg = cg.append('g').attr('class', 'camp-label').attr('display', 'none');
-    lg.append('text').attr('x', lx).attr('y', ly)
-      .attr('text-anchor', anchor).attr('font-size', 7.5)
-      .attr('fill', '#a5f3fc').attr('font-weight', '500').text(tc.t);
-    lg.append('text').attr('x', lx).attr('y', ly+9)
-      .attr('text-anchor', anchor).attr('font-size', 6.5)
-      .attr('fill', '#7dd3fc').text(`Gr.${tc.g} · ${tc.c}`);
+    const lg=cg.append('g').attr('class','camp-label').attr('display','none');
+    lg.append('text').attr('x',lx).attr('y',ly).attr('text-anchor',anchor)
+      .attr('font-size',7.5).attr('fill','#a5f3fc').attr('font-weight','500').text(tc.t);
+    lg.append('text').attr('x',lx).attr('y',ly+9).attr('text-anchor',anchor)
+      .attr('font-size',6.5).attr('fill','#7dd3fc').text(`Gr.${tc.g} · ${tc.c}`);
   });
 
-  // ── HOST MARKERS ──────────────────────────────────────────────────────
-  HOST.forEach(hc => {
-    const p = proj(hc.lo, hc.la);
-    if (!p || isNaN(p[0])) return;
-
-    const hg = gMap.append('g').datum(hc).attr('class', 'host-g')
-      .attr('transform', `translate(${p[0]},${p[1]})`)
-      .attr('cursor', 'pointer');
-
-    const tipHtml = `
-      <strong style="font-size:13px">${hc.n}</strong><br>
+  // Host markers
+  HOST.forEach(hc=>{
+    const p=proj(hc.lo,hc.la);
+    if(!p||isNaN(p[0])) return;
+    const tipHtml=`<strong style="font-size:13px">${hc.n}</strong><br>
       <span style="color:#94a3b8;font-size:12px">${hc.s}</span><br>
       <span style="font-size:11px;color:${hc.note.includes('Final')?'#f59e0b':'#94a3b8'}">${hc.note}</span>`;
 
-    hg.on('mousemove', e => showTip(e, tipHtml))
-      .on('touchstart', e => { e.stopPropagation(); showTip(e, tipHtml); }, {passive:true})
-      .on('mouseleave touchend', hideTip);
+    const hg = gMap.append('g').datum({type:'host',data:hc})
+      .attr('class','host-g').attr('data-id',hc.n)
+      .attr('transform',`translate(${p[0]},${p[1]})`).attr('cursor','pointer')
+      .on('mousemove',e=>showTip(e,tipHtml))
+      .on('touchstart',e=>{e.stopPropagation();showTip(e,tipHtml);},{passive:true})
+      .on('mouseleave touchend',hideTip);
 
-    hg.append('rect').attr('class', 'host-rect')
-      .attr('x', -9).attr('y', -9).attr('width', 18).attr('height', 18).attr('rx', 3)
-      .attr('fill', '#534AB7').attr('stroke', '#a5b4fc').attr('stroke-width', 1.3);
-    hg.append('text').attr('class', 'host-emoji')
-      .attr('text-anchor', 'middle').attr('dominant-baseline', 'central')
-      .attr('font-size', 11).attr('pointer-events', 'none').text('🏟');
+    hg.append('rect').attr('class','host-rect')
+      .attr('x',-9).attr('y',-9).attr('width',18).attr('height',18).attr('rx',3)
+      .attr('fill','#534AB7').attr('stroke','#a5b4fc').attr('stroke-width',1.3);
+    hg.append('text').attr('class','host-emoji')
+      .attr('text-anchor','middle').attr('dominant-baseline','central')
+      .attr('font-size',11).attr('pointer-events','none').text('🏟');
 
-    const westSet = new Set(['Los Ángeles','San Francisco','Seattle','Vancouver']);
-    const anchor = westSet.has(hc.n) ? 'end' : 'start';
-    const lx = westSet.has(hc.n) ? -12 : 12;
-    let ly = -3;
-    if (hc.n === 'Houston')    ly = 9;
-    if (hc.n === 'Monterrey')  ly = 10;
-    if (hc.n === 'Miami')      ly = -14;
-    if (hc.n === 'Dallas')     ly = -12;
+    const westSet=new Set(['Los Ángeles','San Francisco','Seattle','Vancouver']);
+    const anchor=westSet.has(hc.n)?'end':'start';
+    const lx=westSet.has(hc.n)?-12:12;
+    let ly=-3;
+    if(hc.n==='Houston') ly=9;
+    if(hc.n==='Monterrey') ly=10;
+    if(hc.n==='Miami') ly=-14;
+    if(hc.n==='Dallas') ly=-12;
 
-    const lg = hg.append('g').attr('class', 'host-label');
-    lg.append('text').attr('x', lx).attr('y', ly)
-      .attr('text-anchor', anchor).attr('font-size', 9.5).attr('font-weight', '700')
-      .attr('fill', '#f1f5f9').text(hc.n);
-    lg.append('text').attr('x', lx).attr('y', ly+11)
-      .attr('text-anchor', anchor).attr('font-size', 7.5).attr('fill', '#94a3b8').text(hc.s);
-    if (hc.note.includes('Final')) {
-      lg.append('text').attr('x', lx).attr('y', ly+22)
-        .attr('text-anchor', anchor).attr('font-size', 8).attr('fill', '#f59e0b').text('⭐ Final 19 Jul');
-    }
+    const lg=hg.append('g').attr('class','host-label');
+    lg.append('text').attr('x',lx).attr('y',ly).attr('text-anchor',anchor)
+      .attr('font-size',9.5).attr('font-weight','700').attr('fill','#f1f5f9').text(hc.n);
+    lg.append('text').attr('x',lx).attr('y',ly+11).attr('text-anchor',anchor)
+      .attr('font-size',7.5).attr('fill','#94a3b8').text(hc.s);
+    if(hc.note.includes('Final'))
+      lg.append('text').attr('x',lx).attr('y',ly+22).attr('text-anchor',anchor)
+        .attr('font-size',8).attr('fill','#f59e0b').text('⭐ Final 19 Jul');
   });
 
-  // ── COUNTRY LABELS ────────────────────────────────────────────────────
+  // Country labels
   gMap.append('text').attr('class','country-label').attr('x',310).attr('y',70)
     .attr('text-anchor','middle').attr('font-size',16).attr('font-weight','300')
     .attr('fill','rgba(255,120,100,0.22)').attr('letter-spacing',5)
     .attr('pointer-events','none').text('C  A  N  A  D  Á');
-
   gMap.append('text').attr('class','country-label').attr('x',320).attr('y',425)
     .attr('text-anchor','middle').attr('font-size',13).attr('font-weight','300')
     .attr('fill','rgba(100,220,100,0.20)').attr('letter-spacing',4)
     .attr('pointer-events','none').text('M É X I C O');
-
   gMap.append('text').attr('class','country-label').attr('x',370).attr('y',170)
     .attr('text-anchor','middle').attr('font-size',16).attr('font-weight','300')
     .attr('fill','rgba(100,160,255,0.15)').attr('letter-spacing',5)
     .attr('pointer-events','none').text('E S T A D O S   U N I D O S');
 
-}).catch(e => {
+}).catch(e=>{
   svg.append('text').attr('x',20).attr('y',40).attr('fill','#aaa').text('Error: '+e.message);
 });
 
 // ── ZOOM HANDLER ──────────────────────────────────────────────────────────
-function onZoom(event) {
-  const t = event.transform;
-  gMap.attr('transform', t);
-  currentK = t.k;
-  document.getElementById('zlbl').textContent = 'Zoom: ' + currentK.toFixed(1) + '×';
-
-  const ms = Math.max(0.35, 1/Math.sqrt(currentK));
+function onZoom(event){
+  const t=event.transform;
+  gMap.attr('transform',t);
+  currentK=t.k;
+  document.getElementById('zlbl').textContent='Zoom: '+currentK.toFixed(1)+'×';
+  const ms=Math.max(0.35,1/Math.sqrt(currentK));
 
   gMap.selectAll('.camp-g').each(function(){
-    const g = d3.select(this);
-    g.select('.camp-circ').attr('r', 5.5*ms);
-    g.select('.camp-emoji').attr('font-size', 6.5*ms);
+    const g=d3.select(this);
+    g.select('.camp-circ').attr('r',5.5*ms);
+    g.select('.camp-emoji').attr('font-size',6.5*ms);
   });
-
   gMap.selectAll('.host-g').each(function(){
-    const g = d3.select(this);
-    const sz = 18*ms;
+    const g=d3.select(this);
+    const sz=18*ms;
     g.select('.host-rect').attr('x',-sz/2).attr('y',-sz/2).attr('width',sz).attr('height',sz).attr('rx',3*ms);
-    g.select('.host-emoji').attr('font-size', 11*ms);
+    g.select('.host-emoji').attr('font-size',11*ms);
   });
-
   gMap.selectAll('.host-label').each(function(){
-    d3.select(this).selectAll('text').style('font-size', function(){
-      const base = parseFloat(d3.select(this).attr('font-size') || 9);
-      return (base * ms) + 'px';
+    d3.select(this).selectAll('text').style('font-size',function(){
+      const base=parseFloat(d3.select(this).attr('font-size')||9);
+      return (base*ms)+'px';
     });
   });
-
-  gMap.selectAll('.camp-label').attr('display', currentK >= 2.5 ? 'block' : 'none');
-  if (currentK >= 2.5) {
+  gMap.selectAll('.camp-label').attr('display',currentK>=2.5?'block':'none');
+  if(currentK>=2.5){
     gMap.selectAll('.camp-label').each(function(){
-      d3.select(this).selectAll('text').style('font-size', function(){
-        const base = parseFloat(d3.select(this).attr('font-size') || 7);
-        return Math.max(5, base*ms) + 'px';
+      d3.select(this).selectAll('text').style('font-size',function(){
+        const base=parseFloat(d3.select(this).attr('font-size')||7);
+        return Math.max(5,base*ms)+'px';
       });
     });
   }
 }
 
-// ── BUTTONS ───────────────────────────────────────────────────────────────
-document.getElementById('zin').onclick  = () => svg.transition().duration(280).call(zoom.scaleBy, 1.7);
-document.getElementById('zout').onclick = () => svg.transition().duration(280).call(zoom.scaleBy, 1/1.7);
-document.getElementById('rstbtn').onclick = () => svg.transition().duration(500).call(zoom.transform, d3.zoomIdentity);
+document.getElementById('zin').onclick  = ()=>svg.transition().duration(280).call(zoom.scaleBy,1.7);
+document.getElementById('zout').onclick = ()=>svg.transition().duration(280).call(zoom.scaleBy,1/1.7);
+document.getElementById('rstbtn').onclick = ()=>svg.transition().duration(500).call(zoom.transform,d3.zoomIdentity);
+
+// ── FLY TO LOCATION ───────────────────────────────────────────────────────
+function flyTo(lo, la) {
+  const targetScale = 5;
+  const p = projection([lo, la]);
+  const tx = W/2 - p[0]*targetScale;
+  const ty = H/2 - p[1]*targetScale;
+  svg.transition().duration(800)
+    .call(zoom.transform, d3.zoomIdentity.translate(tx,ty).scale(targetScale));
+}
+
+function pulseAt(lo, la) {
+  if (pulseEl) { pulseEl.remove(); pulseEl=null; }
+  const p = projection([lo, la]);
+  if (!p || isNaN(p[0])) return;
+  const el = gMap.append('circle')
+    .attr('cx', p[0]).attr('cy', p[1]).attr('r', 12)
+    .attr('fill', 'none').attr('stroke', '#fbbf24').attr('stroke-width', 2.5)
+    .attr('class','pulse-ring').attr('pointer-events','none');
+  pulseEl = el;
+  setTimeout(()=>{ if(pulseEl===el){ el.remove(); pulseEl=null; } }, 4000);
+}
+
+// ── SEARCH ENGINE ─────────────────────────────────────────────────────────
+const searchInput   = document.getElementById('searchInput');
+const searchResults = document.getElementById('searchResults');
+const clearBtn      = document.getElementById('clearBtn');
+
+// Build search index
+const INDEX = [];
+
+HOST.forEach(h => {
+  INDEX.push({
+    type: 'host',
+    primary: h.n,
+    secondary: h.s,
+    tertiary: h.note,
+    lo: h.lo, la: h.la,
+    raw: h
+  });
+});
+
+CAMPS.forEach(c => {
+  INDEX.push({
+    type: 'camp',
+    primary: c.t,
+    secondary: c.s,
+    tertiary: `Grupo ${c.g} · ${c.c}`,
+    group: c.g,
+    lo: c.lo, la: c.la,
+    raw: c
+  });
+});
+
+function normalize(str) {
+  return str.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+
+function highlight(str, query) {
+  if (!query) return str;
+  const norm = normalize(str);
+  const q    = normalize(query);
+  const idx  = norm.indexOf(q);
+  if (idx === -1) return str;
+  return str.slice(0,idx) + '<span class="hl">' + str.slice(idx,idx+q.length) + '</span>' + str.slice(idx+q.length);
+}
+
+function scoreItem(item, q) {
+  const fields = [item.primary, item.secondary, item.tertiary].map(normalize);
+  const nq = normalize(q);
+  let score = 0;
+  if (fields[0].startsWith(nq)) score += 100;
+  else if (fields[0].includes(nq)) score += 60;
+  if (fields[1].includes(nq)) score += 30;
+  if (fields[2] && fields[2].includes(nq)) score += 10;
+  return score;
+}
+
+function doSearch(query) {
+  const q = query.trim();
+  clearBtn.style.display = q ? 'block' : 'none';
+
+  if (!q) { searchResults.style.display='none'; return; }
+
+  const results = INDEX
+    .map(item => ({ item, score: scoreItem(item,q) }))
+    .filter(r => r.score > 0)
+    .sort((a,b) => b.score - a.score)
+    .slice(0, 12)
+    .map(r => r.item);
+
+  renderResults(results, q);
+}
+
+function renderResults(results, q) {
+  if (!results.length) {
+    searchResults.innerHTML = `<div class="sr-empty">Sin resultados para "<b>${q}</b>"</div>`;
+    searchResults.style.display = 'block';
+    return;
+  }
+
+  const hosts = results.filter(r=>r.type==='host');
+  const camps = results.filter(r=>r.type==='camp');
+
+  let html = '';
+
+  if (hosts.length) {
+    html += `<div class="sr-group-title">🏟 Ciudades sede (${hosts.length})</div>`;
+    hosts.forEach((item,i) => {
+      html += `<div class="sr-item" data-idx="${INDEX.indexOf(item)}" tabindex="0">
+        <span class="sr-badge host">🏟</span>
+        <span class="sr-text">
+          <span class="sr-main">${highlight(item.primary, q)}</span>
+          <span class="sr-sub">${highlight(item.secondary, q)}</span>
+        </span>
+      </div>`;
+    });
+  }
+
+  if (camps.length) {
+    html += `<div class="sr-group-title">⚽ Bases de entrenamiento (${camps.length})</div>`;
+    camps.forEach((item,i) => {
+      html += `<div class="sr-item" data-idx="${INDEX.indexOf(item)}" tabindex="0">
+        <span class="sr-badge camp">⚽</span>
+        <span class="sr-text">
+          <span class="sr-main">${highlight(item.primary, q)}</span>
+          <span class="sr-sub">${highlight(item.secondary, q)} · ${highlight(item.raw.c||'', q)}</span>
+        </span>
+        <span class="sr-group-badge">Gr.${item.group||''}</span>
+      </div>`;
+    });
+  }
+
+  searchResults.innerHTML = html;
+  searchResults.style.display = 'block';
+
+  // Click handlers
+  searchResults.querySelectorAll('.sr-item').forEach(el => {
+    el.addEventListener('click', () => {
+      const idx = parseInt(el.dataset.idx);
+      selectResult(INDEX[idx]);
+    });
+    el.addEventListener('keydown', e => {
+      if (e.key==='Enter') { const idx=parseInt(el.dataset.idx); selectResult(INDEX[idx]); }
+    });
+  });
+}
+
+function selectResult(item) {
+  searchInput.value = item.primary;
+  searchResults.style.display = 'none';
+  flyTo(item.lo, item.la);
+  setTimeout(()=>pulseAt(item.lo, item.la), 400);
+}
+
+// Events
+searchInput.addEventListener('input', e => doSearch(e.target.value));
+searchInput.addEventListener('focus', e => { if(e.target.value) doSearch(e.target.value); });
+
+clearBtn.addEventListener('click', ()=>{
+  searchInput.value='';
+  searchResults.style.display='none';
+  clearBtn.style.display='none';
+  searchInput.focus();
+});
+
+// Keyboard navigation in results
+searchInput.addEventListener('keydown', e => {
+  const items = searchResults.querySelectorAll('.sr-item');
+  const active = searchResults.querySelector('.sr-item.active');
+  if (e.key==='ArrowDown') {
+    e.preventDefault();
+    if (!active) { items[0]&&items[0].classList.add('active'); }
+    else {
+      active.classList.remove('active');
+      const next = active.nextElementSibling?.closest?.('.sr-item') ||
+                   [...items].indexOf(active)+1 < items.length ? items[[...items].indexOf(active)+1] : items[0];
+      next && next.classList.add('active');
+    }
+  } else if (e.key==='ArrowUp') {
+    e.preventDefault();
+    if (!active) { items[items.length-1]&&items[items.length-1].classList.add('active'); }
+    else {
+      active.classList.remove('active');
+      const prev = [...items].indexOf(active)-1 >= 0 ? items[[...items].indexOf(active)-1] : items[items.length-1];
+      prev && prev.classList.add('active');
+    }
+  } else if (e.key==='Enter') {
+    if (active) { const idx=parseInt(active.dataset.idx); selectResult(INDEX[idx]); }
+  } else if (e.key==='Escape') {
+    searchResults.style.display='none';
+  }
+});
+
+// Close on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.search-wrap')) searchResults.style.display='none';
+});
 </script>
 </body>
 </html>
