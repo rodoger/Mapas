@@ -5,16 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Quiniela Familiar Mundial 2026</title>
 <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Montserrat:wght@400;600;700;900&family=Oswald:wght@400;600;700&display=swap" rel="stylesheet">
-<!-- Google tag (gtag.js) -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-0M2HJRSWEK"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-
-  gtag('config', 'G-0M2HJRSWEK');
-</script>
-	
 <style>
   :root {
     --verde: #1a7a1a;
@@ -736,6 +726,12 @@ function pintarTablaQuiniela(columnas, filas) {
   filas = filas.filter(fila => Object.values(fila).some(valor => valor !== ""));
   filas.sort((a, b) => Number(b["Total"] || 0) - Number(a["Total"] || 0));
 
+  const puntosUnicos = [...new Set(
+    filas
+      .map(fila => Number(fila["Total"] || 0))
+      .filter(total => total > 0)
+  )].sort((a, b) => b - a);
+
   thead.innerHTML = `
     <tr>
       ${columnasVisibles.map(col => `<th>${col}</th>`).join("")}
@@ -749,9 +745,9 @@ function pintarTablaQuiniela(columnas, filas) {
           const valor = fila[col] || "";
 
           if (col === "Participante") {
-            const medalla = index === 0 ? "🥇 " : index === 1 ? "🥈 " : index === 2 ? "🥉 " : "";
+            const medalla = obtenerMedallaCompartida(Number(fila["Total"] || 0), puntosUnicos);
             const url = fila["URL"] || "";
-            const nombre = medalla + valor;
+            const nombre = `${medalla}${valor}`;
             return `<td class="participante-cell">${url ? `<a href="${url}" target="_blank" rel="noopener">${nombre}</a>` : nombre}</td>`;
           }
 
@@ -770,6 +766,18 @@ function pintarTablaQuiniela(columnas, filas) {
   }).join("");
 
   status.textContent = `Quinielas cargadas: ${filas.length}`;
+}
+
+function obtenerMedallaCompartida(total, puntosUnicos) {
+  if (!total || total <= 0) return "";
+
+  const lugar = puntosUnicos.indexOf(total) + 1;
+
+  if (lugar === 1) return "🥇 ";
+  if (lugar === 2) return "🥈 ";
+  if (lugar === 3) return "🥉 ";
+
+  return "";
 }
 
 function formatearPaises(texto) {
