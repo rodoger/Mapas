@@ -696,8 +696,8 @@ function pintarTablaQuiniela(columnas, filas) {
   const status = document.getElementById("tablaStatus");
 
   const columnasVisibles = columnas.filter(col => col !== "URL");
+  const indiceTotal = columnas.indexOf("Total");
 
-  filas = filas.filter(fila => Object.values(fila).some(valor => valor !== ""));
   filas.sort((a, b) => Number(b["Total"] || 0) - Number(a["Total"] || 0));
 
   const puntosUnicos = [...new Set(
@@ -712,14 +712,18 @@ function pintarTablaQuiniela(columnas, filas) {
     </tr>
   `;
 
-  tbody.innerHTML = filas.map((fila) => {
+  tbody.innerHTML = filas.map((fila, index) => {
     return `
       <tr>
         ${columnasVisibles.map(col => {
           const valor = fila[col] || "";
 
           if (col === "Participante") {
-            const medalla = obtenerMedallaCompartida(fila["Total"], puntosUnicos);
+            const totalParticipante = Number(fila["Total"] || 0);
+            const lugarPorPuntos = puntosUnicos.indexOf(totalParticipante) + 1;
+            const medalla = totalParticipante > 0
+              ? (lugarPorPuntos === 1 ? "🥇 " : lugarPorPuntos === 2 ? "🥈 " : lugarPorPuntos === 3 ? "🥉 " : "")
+              : "";
             const url = fila["URL"] || "";
             const nombre = medalla + valor;
             return `<td class="participante-cell">${url ? `<a href="${url}" target="_blank" rel="noopener">${nombre}</a>` : nombre}</td>`;
@@ -740,19 +744,6 @@ function pintarTablaQuiniela(columnas, filas) {
   }).join("");
 
   status.textContent = `Quinielas cargadas: ${filas.length}`;
-}
-
-function obtenerMedallaCompartida(total, puntosUnicos) {
-  const puntos = Number(total || 0);
-  if (puntos <= 0) return "";
-
-  const lugar = puntosUnicos.indexOf(puntos) + 1;
-
-  if (lugar === 1) return "🥇 ";
-  if (lugar === 2) return "🥈 ";
-  if (lugar === 3) return "🥉 ";
-
-  return "";
 }
 
 function formatearPaises(texto) {
