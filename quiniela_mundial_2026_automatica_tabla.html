@@ -666,28 +666,54 @@
 </section>
 
 <script>
-const urlTablaWeb = "https://docs.google.com/spreadsheets/d/1TQ-BIHYV_pHU5YN_NKJ93TM0MAFlolJcl13te1X0jww/gviz/tq?tqx=out:json&sheet=Tabla_Web";
+const sheetIdTablaWeb = "1TQ-BIHYV_pHU5YN_NKJ93TM0MAFlolJcl13te1X0jww";
+const nombreHojaTablaWeb = "Tabla_Web";
 
-fetch(urlTablaWeb)
-  .then(res => res.text())
-  .then(text => {
-    const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
-    const json = JSON.parse(jsonText);
+window.recibirTablaWeb = function(json) {
+  try {
+    if (!json || !json.table || !json.table.rows) {
+      throw new Error("Respuesta sin datos de Tabla_Web");
+    }
+
     const columnas = json.table.cols.map(col => col.label || col.id);
     const filas = json.table.rows.map(row => {
       const obj = {};
       columnas.forEach((col, i) => {
-        obj[col] = row.c[i] ? row.c[i].v : "";
+        obj[col] = row.c[i] ? (row.c[i].f || row.c[i].v || "") : "";
       });
       return obj;
     });
 
     pintarTablaQuiniela(columnas, filas);
-  })
-  .catch(error => {
-    document.getElementById("tablaStatus").textContent = "No se pudo cargar la tabla. Revisa que la hoja Tabla_Web esté compartida como pública.";
-    console.error(error);
-  });
+  } catch (error) {
+    mostrarErrorTabla(error);
+  }
+};
+
+function cargarTablaDesdeGoogleSheets() {
+  const script = document.createElement("script");
+  script.src = `https://docs.google.com/spreadsheets/d/${sheetIdTablaWeb}/gviz/tq?tqx=out:json;responseHandler:recibirTablaWeb&sheet=${encodeURIComponent(nombreHojaTablaWeb)}&t=${Date.now()}`;
+  script.onerror = function() {
+    mostrarErrorTabla(new Error("No se pudo conectar con Google Sheets"));
+  };
+  document.body.appendChild(script);
+
+  setTimeout(() => {
+    const status = document.getElementById("tablaStatus");
+    const tbody = document.querySelector("#tablaQuiniela tbody");
+    if (status && tbody && !tbody.innerHTML.trim()) {
+      status.textContent = "La tabla tarda en responder. Revisa que Tabla_Web esté compartida como pública y que tenga datos.";
+    }
+  }, 8000);
+}
+
+function mostrarErrorTabla(error) {
+  const status = document.getElementById("tablaStatus");
+  if (status) {
+    status.textContent = "No se pudo cargar la tabla. Revisa que la hoja Tabla_Web esté compartida como pública y tenga datos.";
+  }
+  console.error(error);
+}
 
 function pintarTablaQuiniela(columnas, filas) {
   const tabla = document.getElementById("tablaQuiniela");
@@ -696,8 +722,8 @@ function pintarTablaQuiniela(columnas, filas) {
   const status = document.getElementById("tablaStatus");
 
   const columnasVisibles = columnas.filter(col => col !== "URL");
-  const indiceTotal = columnas.indexOf("Total");
 
+  filas = filas.filter(fila => Object.values(fila).some(valor => valor !== ""));
   filas.sort((a, b) => Number(b["Total"] || 0) - Number(a["Total"] || 0));
 
   thead.innerHTML = `
@@ -741,8 +767,7 @@ function formatearPaises(texto) {
 
   return texto
     .toString()
-    .split(/,|
-/)
+    .split(/,|\n/)
     .map(item => item.trim())
     .filter(Boolean)
     .map(item => {
@@ -753,6 +778,8 @@ function formatearPaises(texto) {
     })
     .join("<br>");
 }
+
+cargarTablaDesdeGoogleSheets();
 </script>
 
 <!-- INSTRUCCIONES FAMILIARES -->
