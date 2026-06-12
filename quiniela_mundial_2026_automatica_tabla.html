@@ -666,54 +666,28 @@
 </section>
 
 <script>
-const sheetIdTablaWeb = "1TQ-BIHYV_pHU5YN_NKJ93TM0MAFlolJcl13te1X0jww";
-const nombreHojaTablaWeb = "Tabla_Web";
+const urlTablaWeb = "https://docs.google.com/spreadsheets/d/1TQ-BIHYV_pHU5YN_NKJ93TM0MAFlolJcl13te1X0jww/gviz/tq?tqx=out:json&sheet=Tabla_Web";
 
-window.recibirTablaWeb = function(json) {
-  try {
-    if (!json || !json.table || !json.table.rows) {
-      throw new Error("Respuesta sin datos de Tabla_Web");
-    }
-
+fetch(urlTablaWeb)
+  .then(res => res.text())
+  .then(text => {
+    const jsonText = text.substring(text.indexOf('{'), text.lastIndexOf('}') + 1);
+    const json = JSON.parse(jsonText);
     const columnas = json.table.cols.map(col => col.label || col.id);
     const filas = json.table.rows.map(row => {
       const obj = {};
       columnas.forEach((col, i) => {
-        obj[col] = row.c[i] ? (row.c[i].f || row.c[i].v || "") : "";
+        obj[col] = row.c[i] ? row.c[i].v : "";
       });
       return obj;
     });
 
     pintarTablaQuiniela(columnas, filas);
-  } catch (error) {
-    mostrarErrorTabla(error);
-  }
-};
-
-function cargarTablaDesdeGoogleSheets() {
-  const script = document.createElement("script");
-  script.src = `https://docs.google.com/spreadsheets/d/${sheetIdTablaWeb}/gviz/tq?tqx=out:json;responseHandler:recibirTablaWeb&sheet=${encodeURIComponent(nombreHojaTablaWeb)}&t=${Date.now()}`;
-  script.onerror = function() {
-    mostrarErrorTabla(new Error("No se pudo conectar con Google Sheets"));
-  };
-  document.body.appendChild(script);
-
-  setTimeout(() => {
-    const status = document.getElementById("tablaStatus");
-    const tbody = document.querySelector("#tablaQuiniela tbody");
-    if (status && tbody && !tbody.innerHTML.trim()) {
-      status.textContent = "La tabla tarda en responder. Revisa que Tabla_Web esté compartida como pública y que tenga datos.";
-    }
-  }, 8000);
-}
-
-function mostrarErrorTabla(error) {
-  const status = document.getElementById("tablaStatus");
-  if (status) {
-    status.textContent = "No se pudo cargar la tabla. Revisa que la hoja Tabla_Web esté compartida como pública y tenga datos.";
-  }
-  console.error(error);
-}
+  })
+  .catch(error => {
+    document.getElementById("tablaStatus").textContent = "No se pudo cargar la tabla. Revisa que la hoja Tabla_Web esté compartida como pública.";
+    console.error(error);
+  });
 
 function pintarTablaQuiniela(columnas, filas) {
   const tabla = document.getElementById("tablaQuiniela");
@@ -726,20 +700,26 @@ function pintarTablaQuiniela(columnas, filas) {
   filas = filas.filter(fila => Object.values(fila).some(valor => valor !== ""));
   filas.sort((a, b) => Number(b["Total"] || 0) - Number(a["Total"] || 0));
 
+  const puntosUnicos = [...new Set(
+    filas
+      .map(fila => Number(fila["Total"] || 0))
+      .filter(total => total > 0)
+  )].sort((a, b) => b - a);
+
   thead.innerHTML = `
     <tr>
       ${columnasVisibles.map(col => `<th>${col}</th>`).join("")}
     </tr>
   `;
 
-  tbody.innerHTML = filas.map((fila, index) => {
+  tbody.innerHTML = filas.map((fila) => {
     return `
       <tr>
         ${columnasVisibles.map(col => {
           const valor = fila[col] || "";
 
           if (col === "Participante") {
-            const medalla = index === 0 ? "🥇 " : index === 1 ? "🥈 " : index === 2 ? "🥉 " : "";
+            const medalla = obtenerMedallaCompartida(fila["Total"], puntosUnicos);
             const url = fila["URL"] || "";
             const nombre = medalla + valor;
             return `<td class="participante-cell">${url ? `<a href="${url}" target="_blank" rel="noopener">${nombre}</a>` : nombre}</td>`;
@@ -762,12 +742,26 @@ function pintarTablaQuiniela(columnas, filas) {
   status.textContent = `Quinielas cargadas: ${filas.length}`;
 }
 
+function obtenerMedallaCompartida(total, puntosUnicos) {
+  const puntos = Number(total || 0);
+  if (puntos <= 0) return "";
+
+  const lugar = puntosUnicos.indexOf(puntos) + 1;
+
+  if (lugar === 1) return "🥇 ";
+  if (lugar === 2) return "🥈 ";
+  if (lugar === 3) return "🥉 ";
+
+  return "";
+}
+
 function formatearPaises(texto) {
   if (!texto) return "";
 
   return texto
     .toString()
-    .split(/,|\n/)
+    .split(/,|
+/)
     .map(item => item.trim())
     .filter(Boolean)
     .map(item => {
@@ -778,8 +772,6 @@ function formatearPaises(texto) {
     })
     .join("<br>");
 }
-
-cargarTablaDesdeGoogleSheets();
 </script>
 
 <!-- INSTRUCCIONES FAMILIARES -->
