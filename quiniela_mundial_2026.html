@@ -1018,13 +1018,20 @@ function renderizarTarjetasQuiniela(filas) {
           </div>
         </div>
 
-        <div class="quiniela-card-links">
-          ${participanteInfo.url
-            ? `<a href="${escaparAtributo(participanteInfo.url)}" target="_blank" rel="noopener">📋 Quiniela</a>`
-            : ""}
-          ${participanteInfo.url
-            ? `<a class="quiniela-card-url" href="${escaparAtributo(participanteInfo.url)}" target="_blank" rel="noopener">${escaparHTML(obtenerTextoDesdePregunta(participanteInfo.url))}</a>`
-            : ""}
+       <div class="quiniela-card-links">
+  ${participanteInfo.url
+    ? `
+      <div class="link-completo">
+        <strong>📋 Quiniela:</strong><br>
+        <a href="${escaparAtributo(participanteInfo.url)}"
+           target="_blank"
+           rel="noopener">
+           ${participanteInfo.url}
+        </a>
+      </div>
+    `
+    : ""}
+          
           ${participanteInfo.solicitud
             ? `<a href="${escaparAtributo(participanteInfo.solicitud)}" target="_blank" rel="noopener">📝 Solicitud</a>`
             : ""}
