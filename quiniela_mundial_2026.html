@@ -959,6 +959,7 @@ function pintarTablaQuiniela(columnas, filas) {
 
   filas = filas.filter(fila => Object.values(fila).some(valor => valor !== ""));
   filas.sort((a, b) => Number(b["Total"] || 0) - Number(a["Total"] || 0));
+  filas = filas.map((fila, index) => ({ ...fila, __numeroParticipante: index + 1 }));
 
   quinielaFilasOriginales = filas;
   quinielaPuntosUnicos = [...new Set(
@@ -1019,11 +1020,15 @@ function renderizarTarjetasQuiniela(filas) {
     return;
   }
 
-  contenedor.innerHTML = filas.map((fila) => {
+  contenedor.innerHTML = filas.map((fila, index) => {
     const total = fila["Total"] || 0;
-    const medalla = obtenerMedallaCompartida(Number(total || 0), quinielaPuntosUnicos);
+    const etapaFinalCerrada = Number(fila["Finalizada"] || 0) === 1;
+    const medalla = etapaFinalCerrada
+      ? obtenerMedallaCompartida(Number(total || 0), quinielaPuntosUnicos)
+      : "";
     const participanteInfo = obtenerDatosParticipante(fila["Participante"] || "", fila);
-    const nombreConMedalla = `${medalla}${participanteInfo.nombre || ""}`;
+    const numeroParticipante = fila.__numeroParticipante || (index + 1);
+    const nombreConMedalla = `${numeroParticipante}. ${medalla}${participanteInfo.nombre || ""}`;
 
     return `
       <article class="quiniela-card">
