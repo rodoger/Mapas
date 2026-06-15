@@ -749,6 +749,27 @@
   .quiniela-card-total-num { font-size: 1.8rem; }
 }
 
+.quiniela-card-links {
+  width: 100%;
+  overflow: hidden;
+}
+
+.link-completo {
+  width: 100%;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+
+.link-completo a {
+  display: block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
+  white-space: normal;
+  font-size: 0.78rem;
+  line-height: 1.35;
+  color: #7CFF8A;
+}	
 </style>
 </head>
 <body>
@@ -1018,20 +1039,20 @@ function renderizarTarjetasQuiniela(filas) {
           </div>
         </div>
 
-       <div class="quiniela-card-links">
-  ${participanteInfo.url
+        <div class="quiniela-card-links">
+          ${participanteInfo.url
     ? `
       <div class="link-completo">
         <strong>📋 Quiniela:</strong><br>
         <a href="${escaparAtributo(participanteInfo.url)}"
            target="_blank"
            rel="noopener">
-           ${participanteInfo.url}
+          ${escaparHTML(participanteInfo.url)}
         </a>
       </div>
     `
     : ""}
-          
+        
           ${participanteInfo.solicitud
             ? `<a href="${escaparAtributo(participanteInfo.solicitud)}" target="_blank" rel="noopener">📝 Solicitud</a>`
             : ""}
