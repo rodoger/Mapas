@@ -593,6 +593,162 @@
 #tablaQuiniela .total-cell { font-size: 1.3rem; }
 }
 
+
+/* ========= BUSCADOR QUINIELA ========= */
+.buscador-quiniela {
+  max-width: 620px;
+  margin: 0 auto 8px;
+  padding: 0 18px;
+}
+.buscador-quiniela input {
+  width: 100%;
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 999px;
+  padding: 14px 18px;
+  background: rgba(0,0,0,0.28);
+  color: #fff;
+  font-family: 'Montserrat', sans-serif;
+  font-size: 0.95rem;
+  outline: none;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
+}
+.buscador-quiniela input::placeholder {
+  color: rgba(255,255,255,0.55);
+}
+.buscador-quiniela input:focus {
+  border-color: rgba(255,215,0,0.65);
+  box-shadow: 0 0 0 3px rgba(255,215,0,0.12);
+}
+
+
+/* ========= TARJETAS QUINIELA ========= */
+.tarjetas-quiniela {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 20px;
+  padding: 22px;
+}
+.quiniela-card {
+  background: linear-gradient(180deg, rgba(255,255,255,0.07), rgba(0,0,0,0.22));
+  border: 1px solid rgba(255,255,255,0.12);
+  border-radius: 22px;
+  padding: 20px;
+  color: #fff;
+  box-shadow: 0 14px 36px rgba(0,0,0,0.28);
+  overflow: hidden;
+}
+.quiniela-card:hover {
+  border-color: rgba(46,204,64,0.35);
+  box-shadow: 0 18px 48px rgba(0,0,0,0.35);
+}
+.quiniela-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 14px;
+  padding-bottom: 14px;
+  margin-bottom: 14px;
+  border-bottom: 1px solid rgba(255,255,255,0.10);
+}
+.quiniela-card-nombre {
+  font-size: 1.08rem;
+  font-weight: 900;
+  color: var(--amarillo);
+  line-height: 1.25;
+}
+.quiniela-card-nombre a {
+  color: var(--amarillo);
+  text-decoration: none;
+}
+.quiniela-card-nombre a:hover { text-decoration: underline; }
+.quiniela-card-total {
+  flex-shrink: 0;
+  min-width: 76px;
+  text-align: center;
+  border-radius: 16px;
+  padding: 8px 10px;
+  background: rgba(255,215,0,0.12);
+  border: 1px solid rgba(255,215,0,0.25);
+}
+.quiniela-card-total-num {
+  display: block;
+  font-family: 'Bebas Neue', cursive;
+  font-size: 2.2rem;
+  line-height: 1;
+  color: var(--amarillo);
+}
+.quiniela-card-total-label {
+  display: block;
+  font-size: 0.68rem;
+  color: rgba(255,255,255,0.70);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+.quiniela-card-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.quiniela-card-links a {
+  display: inline-block;
+  color: #fff;
+  text-decoration: none;
+  border-radius: 999px;
+  padding: 6px 11px;
+  font-size: 0.74rem;
+  font-weight: 800;
+  background: rgba(255,215,0,0.16);
+  border: 1px solid rgba(255,215,0,0.32);
+}
+.quiniela-card-links a:hover { background: rgba(255,215,0,0.25); }
+.quiniela-card-url {
+  display: block;
+  width: 100%;
+  color: #7CFF8A !important;
+  background: rgba(46,204,64,0.10) !important;
+  border-color: rgba(46,204,64,0.25) !important;
+  word-break: break-all;
+}
+.quiniela-card-fase {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(0,0,0,0.18);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+.quiniela-card-fase h4 {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin: 0 0 8px;
+  color: #7CFF8A;
+  font-family: 'Oswald', sans-serif;
+  font-size: 0.86rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.quiniela-card-fase .fase-puntos {
+  color: var(--amarillo);
+  font-weight: 900;
+  white-space: nowrap;
+}
+.quiniela-card-fase p {
+  margin: 0;
+  line-height: 1.55;
+  font-size: 0.84rem;
+}
+@media(max-width:768px) {
+  .tarjetas-quiniela {
+    grid-template-columns: 1fr;
+    padding: 14px;
+    gap: 16px;
+  }
+  .quiniela-card { padding: 16px; }
+  .quiniela-card-total-num { font-size: 1.8rem; }
+}
+
 </style>
 </head>
 <body>
@@ -715,13 +871,11 @@
     <div class="title-line"></div>
     <div class="tabla-auto-wrapper">
 		<div  class="tabla-status">En esta tabla,  en el nombre del <strong>Participante</strong> se puede ver la quiniela original enviada; en <strong>Solicitud</strong> la imagen del envío;&nbsp; y en las siguientes columnas los equipos seleccionados y los puntos obtenidos.</div>
-      <div id="tablaStatus" class="tabla-status">Cargando quinielas registradas...</div>
-      <div class="tabla-responsive">
-        <table id="tablaQuiniela">
-          <thead></thead>
-          <tbody></tbody>
-        </table>
+      <div class="buscador-quiniela">
+        <input id="buscadorParticipante" type="search" placeholder="Buscar participante..." autocomplete="off" aria-label="Buscar participante">
       </div>
+      <div id="tablaStatus" class="tabla-status">Cargando quinielas registradas...</div>
+      <div id="tarjetasQuiniela" class="tarjetas-quiniela"></div>
     </div>
   </div>
 </section>
@@ -761,8 +915,8 @@ function cargarTablaDesdeGoogleSheets() {
 
   setTimeout(() => {
     const status = document.getElementById("tablaStatus");
-    const tbody = document.querySelector("#tablaQuiniela tbody");
-    if (status && tbody && !tbody.innerHTML.trim()) {
+    const contenedor = document.getElementById("tarjetasQuiniela");
+    if (status && contenedor && !contenedor.innerHTML.trim()) {
       status.textContent = "La tabla tarda en responder. Revisa que Tabla_Web esté compartida como pública y que tenga datos.";
     }
   }, 8000);
@@ -776,57 +930,151 @@ function mostrarErrorTabla(error) {
   console.error(error);
 }
 
-function pintarTablaQuiniela(columnas, filas) {
-  const tabla = document.getElementById("tablaQuiniela");
-  const thead = tabla.querySelector("thead");
-  const tbody = tabla.querySelector("tbody");
-  const status = document.getElementById("tablaStatus");
+let quinielaFilasOriginales = [];
+let quinielaPuntosUnicos = [];
 
-  const columnasVisibles = columnas.filter(
-    col => col !== "URL" && col !== "Solicitud"
-  );
+function pintarTablaQuiniela(columnas, filas) {
+  const status = document.getElementById("tablaStatus");
 
   filas = filas.filter(fila => Object.values(fila).some(valor => valor !== ""));
   filas.sort((a, b) => Number(b["Total"] || 0) - Number(a["Total"] || 0));
 
-  const puntosUnicos = [...new Set(
+  quinielaFilasOriginales = filas;
+  quinielaPuntosUnicos = [...new Set(
     filas
       .map(fila => Number(fila["Total"] || 0))
       .filter(total => total > 0)
   )].sort((a, b) => b - a);
 
-  thead.innerHTML = `
-    <tr>
-      ${columnasVisibles.map(col => `<th>${col}</th>`).join("")}
-    </tr>
-  `;
+  configurarBuscadorParticipante();
+  aplicarBusquedaQuiniela();
 
-  tbody.innerHTML = filas.map((fila) => {
+  if (status) {
+    status.textContent = `Quinielas cargadas: ${filas.length}`;
+  }
+}
+
+function configurarBuscadorParticipante() {
+  const buscador = document.getElementById("buscadorParticipante");
+  if (!buscador || buscador.dataset.configurado === "1") return;
+
+  buscador.dataset.configurado = "1";
+  buscador.addEventListener("input", aplicarBusquedaQuiniela);
+}
+
+function aplicarBusquedaQuiniela() {
+  const buscador = document.getElementById("buscadorParticipante");
+  const status = document.getElementById("tablaStatus");
+  const termino = normalizarBusqueda(buscador ? buscador.value : "");
+
+  const filasFiltradas = quinielaFilasOriginales.filter(fila => {
+    if (!termino) return true;
+
+    const participanteInfo = obtenerDatosParticipante(fila["Participante"] || "", fila);
+    const textoBusqueda = normalizarBusqueda([
+      participanteInfo.nombre,
+      fila["Participante"],
+      fila["Total"]
+    ].join(" "));
+
+    return textoBusqueda.includes(termino);
+  });
+
+  renderizarTarjetasQuiniela(filasFiltradas);
+
+  if (status) {
+    status.textContent = termino
+      ? `Mostrando ${filasFiltradas.length} de ${quinielaFilasOriginales.length} quinielas`
+      : `Quinielas cargadas: ${quinielaFilasOriginales.length}`;
+  }
+}
+
+function renderizarTarjetasQuiniela(filas) {
+  const contenedor = document.getElementById("tarjetasQuiniela");
+  if (!contenedor) return;
+
+  if (!filas.length) {
+    contenedor.innerHTML = `<div class="tabla-status" style="grid-column:1/-1;">No se encontró ningún participante.</div>`;
+    return;
+  }
+
+  contenedor.innerHTML = filas.map((fila) => {
+    const total = fila["Total"] || 0;
+    const medalla = obtenerMedallaCompartida(Number(total || 0), quinielaPuntosUnicos);
+    const participanteInfo = obtenerDatosParticipante(fila["Participante"] || "", fila);
+    const nombreConMedalla = `${medalla}${participanteInfo.nombre || ""}`;
+
     return `
-      <tr>
-        ${columnasVisibles.map(col => {
-          const valor = fila[col] || "";
+      <article class="quiniela-card">
+        <div class="quiniela-card-header">
+          <div class="quiniela-card-nombre">
+            ${participanteInfo.url
+              ? `<a href="${escaparAtributo(participanteInfo.url)}" target="_blank" rel="noopener">${escaparHTML(nombreConMedalla)}</a>`
+              : escaparHTML(nombreConMedalla)}
+          </div>
+          <div class="quiniela-card-total">
+            <span class="quiniela-card-total-num">${escaparHTML(total)}</span>
+            <span class="quiniela-card-total-label">pts</span>
+          </div>
+        </div>
 
-          if (col === "Participante") {
-            const medalla = obtenerMedallaCompartida(Number(fila["Total"] || 0), puntosUnicos);
-            return `<td class="participante-cell">${formatearParticipante(valor, fila, medalla)}</td>`;
-          }
+        <div class="quiniela-card-links">
+          ${participanteInfo.url
+            ? `<a href="${escaparAtributo(participanteInfo.url)}" target="_blank" rel="noopener">📋 Quiniela</a>`
+            : ""}
+          ${participanteInfo.url
+            ? `<a class="quiniela-card-url" href="${escaparAtributo(participanteInfo.url)}" target="_blank" rel="noopener">${escaparHTML(obtenerTextoDesdePregunta(participanteInfo.url))}</a>`
+            : ""}
+          ${participanteInfo.solicitud
+            ? `<a href="${escaparAtributo(participanteInfo.solicitud)}" target="_blank" rel="noopener">📝 Solicitud</a>`
+            : ""}
+        </div>
 
-          if (col === "Total") {
-            return `<td class="total-cell">${valor}</td>`;
-          }
-
-          if (col.toLowerCase().includes("pts")) {
-            return `<td class="pts-cell">${valor}</td>`;
-          }
-
-          return `<td>${formatearPaises(valor)}</td>`;
-        }).join("")}
-      </tr>
+        ${crearBloqueFase("16os", fila["16os"], fila["Pts 16os"])}
+        ${crearBloqueFase("8os", fila["8os"], fila["Pts 8os"])}
+        ${crearBloqueFase("4os", fila["4os"], fila["Pts 4os"])}
+        ${crearBloqueFase("Semifinal", fila["Semifinal"], fila["Pts Semi"])}
+        ${crearBloqueFase("Final", fila["Final"], fila["Pts Final"])}
+        ${crearBloqueFase("Campeón", fila["Campeón"], fila["Pts Campeón"])}
+      </article>
     `;
   }).join("");
+}
 
-  status.textContent = `Quinielas cargadas: ${filas.length}`;
+function normalizarBusqueda(texto) {
+  return (texto || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+}
+
+function crearBloqueFase(titulo, paises, puntos) {
+  return `
+    <div class="quiniela-card-fase">
+      <h4>${escaparHTML(titulo)} <span class="fase-puntos">${escaparHTML(puntos || 0)} pts</span></h4>
+      <p>${formatearPaises(paises || "")}</p>
+    </div>
+  `;
+}
+
+function obtenerDatosParticipante(texto, fila) {
+  const partes = (texto || "").toString().split("|").map(p => p.trim()).filter(Boolean);
+
+  let nombre = partes[0] || "";
+  let solicitud = fila["Solicitud"] || "";
+  let url = fila["URL"] || "";
+
+  // Formato esperado en Tabla_Web: Participante | Solicitud | URL
+  if (partes.length >= 3) {
+    solicitud = solicitud || partes[1];
+    url = url || partes[2];
+  } else if (partes.length === 2) {
+    url = url || partes[1];
+  }
+
+  return { nombre, solicitud, url };
 }
 
 function obtenerMedallaCompartida(total, puntosUnicos) {
