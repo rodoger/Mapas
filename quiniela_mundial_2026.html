@@ -770,6 +770,142 @@
   line-height: 1.35;
   color: #7CFF8A;
 }	
+/* ========= CARRERA DE PUNTOS (EJE DE FECHAS) ========= */
+.carrera-section {
+  background: linear-gradient(180deg, #050a05 0%, #0a1520 100%);
+  padding: 70px 20px 90px;
+}
+
+.carrera-subtitle {
+  text-align: center;
+  color: rgba(255,255,255,0.55);
+  font-size: 0.95rem;
+  max-width: 600px;
+  margin: 0 auto 50px;
+  line-height: 1.7;
+}
+
+.carrera-wrapper {
+  max-width: 980px;
+  margin: 0 auto;
+  background: linear-gradient(180deg, #1b3a1b, #142a14);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 24px;
+  padding: 30px 24px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+  position: relative;
+  overflow-x: auto;
+}
+
+.carrera-pista-unica {
+  position: relative;
+  height: 260px;
+  min-width: 480px;
+  border-bottom: 3px solid rgba(255,255,255,0.18);
+  margin-top: 10px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-start;
+  gap: 28px;
+  padding-bottom: 0;
+}
+
+.carrera-pista-unica::before {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; top: 0; bottom: 0;
+  background-image: repeating-linear-gradient(180deg, rgba(255,255,255,0.035) 0 1px, transparent 1px 26px);
+  z-index: 0;
+}
+
+.carrera-grupo {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  z-index: 2;
+  flex-shrink: 0;
+}
+
+.carrera-grupo-nombres {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 3px;
+}
+
+.carrera-nombre-vertical {
+  writing-mode: vertical-rl;
+  text-orientation: mixed;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  font-family: 'Oswald', sans-serif;
+  letter-spacing: 0.3px;
+  background: rgba(0,0,0,0.5);
+  padding: 6px 4px;
+  border-radius: 8px;
+  white-space: nowrap;
+  max-height: 130px;
+  border: 1px solid rgba(255,255,255,0.08);
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.carrera-trofeo {
+  writing-mode: horizontal-tb;
+  position: absolute;
+  top: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 0.9rem;
+}
+
+/* Colores de nombre que combinan con su etiqueta de puntos (mismo grupo de empate) */
+.carrera-nombre-vertical.empate-1 { background: rgba(255,107,107,0.28); border-color: #FF6B6B; }
+.carrera-nombre-vertical.empate-2 { background: rgba(77,208,225,0.28); border-color: #4DD0E1; }
+.carrera-nombre-vertical.empate-3 { background: rgba(179,136,255,0.28); border-color: #B388FF; }
+.carrera-nombre-vertical.empate-4 { background: rgba(105,240,174,0.28); border-color: #69F0AE; }
+.carrera-nombre-vertical.empate-5 { background: rgba(255,165,82,0.28); border-color: #FFA552; }
+.carrera-nombre-vertical.empate-6 { background: rgba(255,128,171,0.28); border-color: #FF80AB; }
+
+.carrera-grupo-puntos {
+  font-family: 'Bebas Neue', cursive;
+  font-size: 0.95rem;
+  color: var(--oscuro);
+  background: var(--amarillo);
+  padding: 2px 12px;
+  border-radius: 10px;
+  white-space: nowrap;
+  letter-spacing: 0.5px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.15) inset;
+}
+
+/* Colores distintivos para grupos con empate (2 o más participantes con el mismo puntaje) */
+.carrera-grupo-puntos.empate-1 { background: #FF6B6B; color: #2a0000; }
+.carrera-grupo-puntos.empate-2 { background: #4DD0E1; color: #00282b; }
+.carrera-grupo-puntos.empate-3 { background: #B388FF; color: #1a0033; }
+.carrera-grupo-puntos.empate-4 { background: #69F0AE; color: #00301a; }
+.carrera-grupo-puntos.empate-5 { background: #FFA552; color: #331a00; }
+.carrera-grupo-puntos.empate-6 { background: #FF80AB; color: #330018; }
+
+.carrera-status {
+  text-align: center;
+  color: rgba(255,255,255,0.45);
+  font-size: 0.85rem;
+  padding: 30px 10px;
+  font-style: italic;
+}
+
+@media(max-width:700px) {
+  .carrera-wrapper { padding: 22px 14px; }
+  .carrera-pista-unica { min-width: 560px; height: 220px; gap: 18px; }
+  .carrera-nombre-vertical { font-size: 0.62rem; max-height: 100px; padding: 5px 3px; }
+  .carrera-grupo-puntos { font-size: 0.8rem; padding: 1px 9px; }
+}
+
 </style>
 </head>
 <body>
@@ -886,6 +1022,19 @@
 <hr class="divider">
 
 <!-- TABLA AUTOMÁTICA RESPONSIVE -->
+<!-- TABLA DE POSICIONES POR PUNTOS -->
+<section class="carrera-section">
+  <div class="section">
+    <h2 class="section-title">La <span>Carrera</span> de Puntos</h2>
+    <div class="title-line"></div>
+    <p class="carrera-subtitle">Resumen de puntos.</p>
+    <div class="carrera-wrapper">
+      <div id="carreraStatus" class="carrera-status">Cargando carrera...</div>
+      <div id="carreraTracks" class="carrera-pista-unica"></div>
+    </div>
+  </div>
+</section>
+
 <section class="tabla-auto-section">
   <div class="section">
     <h2 class="section-title">Tabla de <span>Resultados</span></h2>
@@ -948,8 +1097,77 @@ function mostrarErrorTabla(error) {
   if (status) {
     status.textContent = "No se pudo cargar la tabla. Revisa que la hoja Tabla_Web esté compartida como pública y tenga datos.";
   }
+  const carreraStatus = document.getElementById("carreraStatus");
+  if (carreraStatus) {
+    carreraStatus.textContent = "No se pudo cargar la carrera. Revisa que la hoja Tabla_Web esté compartida como pública y tenga datos.";
+  }
   console.error(error);
 }
+
+function renderizarCarreraBalones(filas) {
+  const status = document.getElementById("carreraStatus");
+  const contenedor = document.getElementById("carreraTracks");
+  if (!contenedor) return;
+
+  const filasConPuntos = filas
+    .map(fila => ({
+      nombre: obtenerDatosParticipante(fila["Participante"] || "", fila).nombre || "Sin nombre",
+      total: Number(fila["Total"] || 0),
+      esCampeon: Number(fila["Campeón"] || 0) === 1
+    }))
+    .filter(f => f.nombre);
+
+  if (!filasConPuntos.length) {
+    if (status) status.textContent = "Aún no hay quinielas registradas para mostrar la carrera.";
+    contenedor.innerHTML = "";
+    return;
+  }
+
+  if (status) status.style.display = "none";
+
+  // Agrupar participantes por puntaje idéntico: comparten la misma etiqueta de puntos.
+  const gruposPorPuntos = {};
+  filasConPuntos.forEach(f => {
+    if (!gruposPorPuntos[f.total]) gruposPorPuntos[f.total] = [];
+    gruposPorPuntos[f.total].push(f);
+  });
+
+  // Ordenamos los grupos de MENOR a MAYOR puntaje, porque la pista se dibuja
+  // de izquierda a derecha y queremos que el mayor puntaje quede más a la derecha.
+  const puntosOrdenadosAscendente = Object.keys(gruposPorPuntos)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  const NUM_COLORES_EMPATE = 6;
+  let contadorGruposConEmpate = 0;
+
+  const gruposHTML = puntosOrdenadosAscendente.map(puntos => {
+    const participantesGrupo = gruposPorPuntos[puntos];
+    const hayEmpate = participantesGrupo.length > 1;
+
+    let claseColor = "";
+    if (hayEmpate) {
+      const numeroColor = (contadorGruposConEmpate % NUM_COLORES_EMPATE) + 1;
+      claseColor = ` empate-${numeroColor}`;
+      contadorGruposConEmpate++;
+    }
+
+    const nombresHTML = participantesGrupo.map(p => {
+      const trofeo = p.esCampeon ? `<span class="carrera-trofeo">🏆</span>` : "";
+      return `<div class="carrera-nombre-vertical${claseColor}" title="${escaparAtributo(p.nombre)}">${trofeo}${escaparHTML(p.nombre)}</div>`;
+    }).join("");
+
+    return `
+      <div class="carrera-grupo">
+        <div class="carrera-grupo-nombres">${nombresHTML}</div>
+        <div class="carrera-grupo-puntos${claseColor}">${puntos} pts</div>
+      </div>
+    `;
+  });
+
+  contenedor.innerHTML = gruposHTML.join("");
+}
+
 
 let quinielaFilasOriginales = [];
 let quinielaPuntosUnicos = [];
@@ -970,6 +1188,7 @@ function pintarTablaQuiniela(columnas, filas) {
 
   configurarBuscadorParticipante();
   aplicarBusquedaQuiniela();
+  renderizarCarreraBalones(filas);
 
   if (status) {
     status.textContent = `Quinielas cargadas: ${filas.length}`;
