@@ -128,15 +128,32 @@
 
   /* MAP */
   #wrap {
-    position: relative; border-radius: 12px; overflow: hidden;
-    border: 1px solid #1e3a5f; background: #0d1b2e; flex: 1; min-height: 0;
+    position: relative;
+    width: 100%;
+    height: calc(100dvh - 155px);
+    min-height: 420px;
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #1e3a5f;
+    background: #0d1b2e;
   }
   #msv {
-    display: block; width: 100%;
-    height: clamp(320px, 60vw, 700px);
-    cursor: grab; touch-action: none;
+    display: block;
+    width: 100%;
+    height: 100%;
+    cursor: grab;
+    touch-action: none;
   }
   #msv:active { cursor: grabbing; }
+
+  .map-description {
+    width: 90%;
+    margin: 10px auto 0;
+    font-size: clamp(11px, 1.5vw, 14px);
+    line-height: 1.6;
+    color: #cbd5e1;
+    text-align: justify;
+  }
 
   /* Highlight pulse on map */
   @keyframes pulse {
@@ -194,11 +211,21 @@
 
   @media (max-width: 480px) {
     .page { padding: 8px; gap: 7px; }
-    #msv { height: 58vw; min-height: 280px; }
+    #wrap {
+      height: calc(100dvh - 145px);
+      min-height: 500px;
+    }
+    #msv {
+      width: 100%;
+      height: 100%;
+    }
     .leg { gap: 7px 12px; }
   }
   @media (min-width: 900px) {
-    #msv { height: min(72vh, 680px); }
+    #wrap {
+      height: min(72vh, 700px);
+    }
+    #msv { height: 100%; }
   }
 </style>
 </head>
@@ -207,9 +234,9 @@
 
   <!-- HEADER -->
   <div class="header">
-    <h1>FIFA World Cup 2026™ — Norteamérica · Sedes y Bases de Entrenamiento</h1>
+    <h1>  Sedes y Bases de Entrenamiento del Mundial de Futbol 2026  de Norteamérica</h1>
     <div class="author">Por Rodolfo Gerardo Ortiz Morales</div>
-    <div class="made-with">Realizado con Claude.ai</div>
+    <div class="made-with">⚽</div>
   </div>
 
   <!-- BUSCADOR -->
@@ -224,19 +251,16 @@
   <div id="wrap">
     <svg id="msv"></svg>
     <div class="zbtns">
-      <button class="zbtn" id="zin"  title="Acercar">+</button>
+      <button class="zbtn" id="zin" title="Acercar">+</button>
       <button class="zbtn" id="zout" title="Alejar">−</button>
     </div>
     <button id="rstbtn">↺ Inicio</button>
-	    <table border="0" width="100%">
-  <tr>
-    <td width="5%"></td>
-    <td>Para este Mundial de Fútbol, que se realizará en México, Estados Unidos y Canadá, habrá 16 sedes oficiales para los partidos; sin embargo, también existirán 25 sedes adicionales destinadas a los campamentos base. Es decir, este Mundial se desarrollará directamente, en términos deportivos, en 41 lugares de Norteamérica, como se puede observar en el mapa.</td>
-    <td width="5%"></td>
-  </tr>
-</table>
     <div id="zlbl">Zoom: 1.0×</div>
     <div id="tip"></div>
+  </div>
+
+  <div class="map-description">
+    Para este Mundial de Fútbol, que se realizará en México, Estados Unidos y Canadá, habrá 16 sedes oficiales para los partidos; sin embargo, también existirán 25 sedes adicionales destinadas a los campamentos base. Es decir, este Mundial se desarrollará directamente, en términos deportivos, en 41 lugares de Norteamérica, como se puede observar en el mapa.
   </div>
 
   <!-- LEGEND -->
@@ -263,7 +287,7 @@
   </div>
 
   <div class="footer">
-    Fuente: FIFA.com/es/tournaments/mens/worldcup/canadamexicousa2026 · inside.fifa.com · © FIFA 2026
+   Investigación y producción: Mtro. Rodolfo Gerardo Ortiz Morales. Fuente de datos: <https://www.fifa.com/es/tournaments/mens/worldcup/canadamexicousa2026> Ciudad de México.</br> Adaptación web realizada con Claude.ai, Mayo 2026.
   </div>
 </div>
 
@@ -349,8 +373,9 @@ const tip   = document.getElementById('tip');
 
 const svg = d3.select('#msv')
   .attr('viewBox',`0 0 ${W} ${H}`)
-  .attr('preserveAspectRatio','xMidYMid meet')
-  .attr('width','100%');
+  .attr('preserveAspectRatio','xMidYMid slice')
+  .attr('width','100%')
+  .attr('height','100%');
 
 const projection = d3.geoMercator().center([-95,34]).scale(710).translate([W/2, H/2+10]);
 const pathGen = d3.geoPath().projection(projection);
@@ -388,7 +413,7 @@ d3.json('https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json').then(w
     .data(countries.features).join('path').attr('class','land')
     .attr('d',pathGen)
     .attr('fill',d=>colorMap[String(d.id)]||'#1c2333')
-    .attr('stroke','#334155').attr('stroke-width',0.5);
+    .attr('stroke','#8FA7BE').attr('stroke-width',0.5);
 
   // Lines
   CAMPS.forEach(tc=>{
