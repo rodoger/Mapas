@@ -1,0 +1,1206 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Expansión territorial de la pandemia de SARS-CoV-2 (COVID-19) en colonias de la Ciudad de México</title>
+<link rel="stylesheet" href="lib/leaflet.css">
+<style>
+  :root{
+    --rojo: #CC0000;
+    --rojo-vivo: #FF0000;
+    --oscuro: #434343;
+    --gris: #B7B7B7;
+    --azul-panel: #D0E0E3;
+    --azul-banner: #9FC5E8;
+    --teal-gris: #A2C4C9;
+    --rosa: #F4CCCC;
+    --blanco: #FFFFFF;
+    --radius: 14px;
+    --maxw: 1320px;
+  }
+
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    font-family: Arial, Helvetica, sans-serif;
+    color:var(--oscuro);
+    background:var(--blanco) url('img/fondo.png') center top / cover fixed no-repeat;
+    line-height:1.45;
+  }
+
+  a{color:var(--rojo);}
+
+  .wrap{max-width:var(--maxw); margin:0 auto; padding:0 20px;}
+
+  /* ---------- Header ---------- */
+  header.banner{
+    background:rgba(159,197,232,0.72); /* --azul-banner con transparencia */
+    backdrop-filter:blur(2px);
+    border-radius:0 0 40px 40px;
+    padding:34px 20px 40px;
+    text-align:center;
+    margin-bottom:28px;
+  }
+  header.banner h1{
+    color:var(--rojo);
+    font-weight:700;
+    font-size:clamp(1.4rem, 3.2vw, 2.5rem);
+    margin:0 auto;
+    max-width:1000px;
+    letter-spacing:.2px;
+  }
+  header.banner p.subtitle{
+    margin:10px auto 0;
+    max-width:760px;
+    color:var(--oscuro);
+    font-size:.95rem;
+  }
+
+  section{margin:0 auto 44px; max-width:var(--maxw); padding:0 20px;}
+
+  h2.section-title{
+    color:var(--rojo);
+    font-size:1.3rem;
+    border-bottom:3px solid var(--rojo);
+    display:inline-block;
+    padding-bottom:4px;
+    margin:0 0 18px;
+  }
+
+  /* ---------- Intro ---------- */
+  .intro-grid{
+    display:grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap:28px;
+    align-items:start;
+  }
+  .intro-grid p{margin:0 0 12px; font-size:.98rem;}
+  .stat-cards{display:flex; gap:14px; flex-wrap:wrap;}
+  .stat-card{
+    background:var(--rojo);
+    color:#fff;
+    border-radius:var(--radius);
+    padding:16px 20px;
+    min-width:140px;
+    flex:1;
+  }
+  .stat-card .num{font-size:1.7rem; font-weight:700; display:block;}
+  .stat-card .lab{font-size:.78rem; opacity:.9;}
+
+  /* ---------- Map viewer ---------- */
+  .map-card{
+    background:#fff;
+    border:1px solid #e5e5e5;
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:0 2px 18px rgba(0,0,0,.06);
+  }
+  .map-stage-outer{
+    position:relative;
+    background:linear-gradient(180deg,#fbfbfb,#f3f3f3);
+    border-radius:10px;
+    overflow:hidden;
+    border:1px solid #eaeaea;
+  }
+  .map-stage-outer:fullscreen{
+    background:#000; display:flex; align-items:center; justify-content:center;
+  }
+  .map-stage-outer:fullscreen .map-stage{
+    aspect-ratio: 670 / 768; /* JS fija width/height exactos; esto es solo respaldo */
+  }
+  .map-stage{
+    position:relative;
+    width:100%;
+    aspect-ratio: 670 / 768;
+    overflow:hidden;
+    cursor:grab;
+    touch-action:none;
+  }
+  .map-stage.dragging{cursor:grabbing;}
+  .map-zoom-inner{
+    position:absolute; inset:0;
+    transform-origin: 0 0;
+    will-change:transform;
+  }
+  .map-layer{
+    position:absolute; inset:0;
+    width:100%; height:100%;
+    opacity:0;
+    transition:opacity .55s ease;
+    pointer-events:none;
+    user-select:none;
+    -webkit-user-drag:none;
+  }
+  .map-layer.active{opacity:1;}
+  .toponimos-layer{
+    position:absolute; inset:0;
+    pointer-events:none;
+  }
+  .toponimo{
+    position:absolute;
+    font-size: 6.5px;
+    font-weight:700;
+    color:#1414c9;
+    white-space:nowrap;
+    text-shadow: 0 0 3px #fff, 0 0 3px #fff, 0 0 2px #fff;
+    opacity:0;
+    transition:opacity .5s ease;
+    pointer-events:auto;
+    user-select:text;
+    cursor:text;
+    line-height:1;
+  }
+  .toponimo.show{opacity:1;}
+
+  /* north arrow */
+  .north-arrow{
+    position:absolute; top:12px; left:12px;
+    width:34px; text-align:center;
+    color:var(--oscuro);
+    font-weight:700; font-size:11px;
+    filter:drop-shadow(0 0 2px #fff) drop-shadow(0 0 2px #fff);
+    z-index:5;
+  }
+  .north-arrow svg{display:block; margin:0 auto;}
+
+  /* scale bar */
+  .scale-bar{
+    position:absolute; left:12px; bottom:104px;
+    z-index:5;
+    background:rgba(255,255,255,.78);
+    border-radius:6px;
+    padding:4px 8px 2px;
+    font-size:8.5px;
+    color:var(--oscuro);
+  }
+  .scale-bar svg{display:block;}
+  .scale-bar .lab-row{display:flex; justify-content:space-between; width:120px; margin-top:1px;}
+  .scale-bar .cap{text-align:center; margin-top:1px; letter-spacing:.3px;}
+
+  .map-zoom-controls{
+    position:absolute; right:12px; top:12px; z-index:6;
+    display:flex; flex-direction:column; gap:6px;
+  }
+  .zbtn{
+    width:30px; height:30px; border-radius:8px; border:1px solid #ddd;
+    background:#fff; color:var(--rojo); font-size:16px; font-weight:700;
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+    box-shadow:0 1px 4px rgba(0,0,0,.12);
+  }
+  .zbtn:hover{background:var(--rosa);}
+
+  .month-badge{
+    position:absolute; right:12px; bottom:104px; z-index:5;
+    background:var(--rojo); color:#fff; font-weight:700;
+    padding:6px 14px; border-radius:20px; font-size:.85rem;
+    box-shadow:0 2px 8px rgba(0,0,0,.15);
+  }
+
+  /* floating legend inside the map */
+  .map-legend-float{
+    position:absolute; top:194px; right:12px; z-index:7;
+    width:200px;
+    background:rgba(255,255,255,.96);
+    border:1px solid #e5e5e5; border-radius:10px; padding:12px 14px;
+    box-shadow:0 3px 14px rgba(0,0,0,.16);
+    transition:opacity .15s ease, transform .15s ease;
+  }
+  .map-legend-float.hidden{ opacity:0; pointer-events:none; transform:translateY(-6px); }
+  .map-legend-float h3{
+    margin:0 0 6px; font-size:.78rem; color:var(--rojo); text-transform:uppercase; letter-spacing:.4px;
+  }
+  .legend-close{
+    position:absolute; top:6px; right:8px; border:none; background:none; cursor:pointer;
+    color:#999; font-size:11px;
+  }
+  .legend-close:hover{color:var(--rojo);}
+  .symbology-row{display:flex; align-items:flex-end; gap:10px; justify-content:space-around;}
+  .symbology-item{text-align:center; font-size:.64rem; color:var(--oscuro);}
+  .symbology-item svg{display:block; margin:0 auto 3px;}
+
+  .credits-mini{font-size:.72rem; color:#777; line-height:1.5;}
+  .credits-mini b{color:var(--oscuro);}
+
+  /* ---------- Timeline control ---------- */
+  .timeline{
+    margin-top:18px;
+    padding:16px 18px 10px;
+    background:#fafafa;
+    border-radius:10px;
+    border:1px solid #eee;
+  }
+  .map-timeline-float{
+    position:absolute; left:0; right:0; bottom:0; z-index:1000;
+    margin-top:0;
+    background:rgba(255,255,255,.94);
+    border-radius:0;
+    border:none;
+    border-top:1px solid #e5e5e5;
+    padding:10px 16px 8px;
+  }
+  .map-timeline-float .timeline-title{ font-size:.82rem; }
+  .map-timeline-float .play-btn{ padding:5px 12px; font-size:.72rem; }
+  .timeline-top{
+    display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:8px;
+    flex-wrap:wrap;
+  }
+  .timeline-title{font-weight:700; color:var(--rojo); font-size:1rem;}
+  .play-btn{
+    background:var(--rojo); color:#fff; border:none; border-radius:20px;
+    padding:7px 16px; font-size:.82rem; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; gap:6px;
+  }
+  .play-btn:hover{background:#a80000;}
+  input[type="range"].tl-range{
+    width:100%;
+    -webkit-appearance:none; appearance:none;
+    height:6px; border-radius:4px; background:var(--gris);
+    outline:none; margin:14px 0 6px;
+  }
+  input[type="range"].tl-range::-webkit-slider-thumb{
+    -webkit-appearance:none; width:20px; height:20px; border-radius:50%;
+    background:var(--rojo); cursor:pointer; border:3px solid #fff; box-shadow:0 0 0 1px var(--rojo);
+  }
+  input[type="range"].tl-range::-moz-range-thumb{
+    width:20px; height:20px; border-radius:50%;
+    background:var(--rojo); cursor:pointer; border:3px solid #fff; box-shadow:0 0 0 1px var(--rojo);
+  }
+  .tl-labels{
+    display:flex; justify-content:space-between; font-size:.72rem; color:#777;
+    padding:0 2px;
+  }
+  .tl-labels span{cursor:pointer; padding:2px 4px; border-radius:4px;}
+  .tl-labels span.current{color:var(--rojo); font-weight:700; background:var(--rosa);}
+
+  /* ---------- charts row ---------- */
+  .charts-row{
+    display:grid;
+    grid-template-columns: 1.15fr .85fr;
+    gap:22px;
+    align-items:stretch;
+  }
+  .chart-card{
+    background:#fff; border:1px solid #e5e5e5; border-radius:var(--radius);
+    padding:20px; box-shadow:0 2px 18px rgba(0,0,0,.06);
+    display:flex; flex-direction:column;
+  }
+  .chart-card h3{
+    margin:0 0 4px; color:var(--rojo); font-size:1.05rem;
+  }
+  .chart-card .chart-sub{font-size:.78rem; color:#888; margin-bottom:14px;}
+  .placeholder-note{
+    font-size:.72rem; color:#999; margin-top:10px; border-top:1px dashed #ddd; padding-top:8px;
+  }
+
+  /* cartogram */
+  .cartogram{
+    position:relative;
+    width:100%;
+    aspect-ratio: 3978440 / 4051272; /* misma proporción que el grupo original en el PPTX */
+  }
+  .cg-cell{
+    position:absolute;
+    background:var(--rojo);
+    border:1.5px solid #fff;
+    overflow:hidden;
+    transition:filter .15s ease;
+  }
+  .cg-cell:hover{filter:brightness(1.12);}
+  .cg-label{
+    position:absolute; top:4px; left:6px; right:6px;
+    color:#fff; font-weight:700; line-height:1.15;
+    font-size:.68rem;
+    pointer-events:none;
+  }
+  .cg-label .n{display:block; font-weight:400; font-size:.9em; opacity:.92;}
+  .cg-desc{
+    position:absolute;
+    background:var(--oscuro);
+    display:flex; align-items:flex-end; justify-content:flex-end;
+  }
+  .cg-desc span{
+    color:#fff; font-size:.62rem; font-weight:700; padding:1px 4px;
+  }
+  .cg-legend{display:flex; gap:18px; margin-top:12px; font-size:.72rem; color:var(--oscuro); flex-wrap:wrap;}
+  .cg-legend .sw{display:inline-block; width:12px; height:12px; margin-right:5px; vertical-align:-2px; border-radius:2px;}
+
+  /* donut */
+  .donut-wrap{display:flex; gap:18px; align-items:center; flex-wrap:wrap; justify-content:center; flex:1;}
+  .donut-wrap svg{max-width:260px; width:100%; height:auto;}
+  .donut-legend{font-size:.72rem; flex:1; min-width:180px;}
+  .donut-legend div.row{display:flex; align-items:center; gap:6px; padding:2px 0; cursor:default;}
+  .donut-legend .sw{width:10px; height:10px; border-radius:2px; flex-shrink:0;}
+  .donut-legend .lab{flex:1;}
+  .donut-legend .val{font-weight:700; color:var(--oscuro);}
+  .donut-tip{
+    position:fixed; pointer-events:none; background:var(--oscuro); color:#fff;
+    padding:5px 9px; border-radius:6px; font-size:.72rem; opacity:0; transition:opacity .1s;
+    z-index:50; white-space:nowrap;
+  }
+
+  /* ---------- Credits & sources ---------- */
+  .credits-card{
+    background:var(--azul-panel);
+    border-radius:var(--radius);
+    padding:22px 26px;
+    font-size:.85rem;
+  }
+  .credits-card h3{margin-top:0; color:var(--oscuro); font-size:.95rem;}
+
+  /* ---------- Recurso original ---------- */
+  .original-card{
+    border:2px dashed var(--gris);
+    border-radius:var(--radius);
+    padding:24px;
+    background:#fdfdfd;
+  }
+  .original-card h2{margin-top:0;}
+  .original-links{
+    display:grid; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); gap:12px; margin-top:14px;
+  }
+  .original-links a{
+    display:block; padding:12px 14px; background:#fff; border:1px solid #e5e5e5;
+    border-radius:8px; text-decoration:none; color:var(--oscuro); font-size:.82rem;
+  }
+  .original-links a b{color:var(--rojo); display:block; font-size:.85rem; margin-bottom:2px;}
+  .original-links a:hover{border-color:var(--rojo);}
+  .original-placeholder{
+    margin-top:16px; padding:14px; border-radius:8px; background:#fff; border:1px dashed #ccc; font-size:.8rem; color:#888;
+  }
+
+  /* ---------- Vector map (Leaflet) ---------- */
+  .vmap-card{
+    background:#fff; border:1px solid #e5e5e5; border-radius:var(--radius);
+    padding:20px; box-shadow:0 2px 18px rgba(0,0,0,.06);
+  }
+  .vmap-stage-outer{
+    position:relative;
+    border-radius:10px; overflow:hidden; border:1px solid #eaeaea;
+  }
+  .vmap-stage-outer:fullscreen{ background:#fff; }
+  .vmap-stage-outer:fullscreen #vmap{ height:100vh; }
+  #vmap{ width:100%; height:640px; background:#f4f6f6; }
+  .leaflet-container{ font-family:Arial, Helvetica, sans-serif; }
+  .leaflet-tooltip.colonia-tip{ font-family:Arial; font-size:.72rem; color:var(--oscuro); border-color:var(--rojo); }
+
+  .vmap-zoom-controls{ position:absolute; right:12px; top:12px; z-index:600; }
+  .vmap-search-float{
+    position:absolute; left:12px; top:12px; z-index:600; width:230px;
+  }
+  .vmap-search-float input{
+    width:100%; padding:8px 12px; border-radius:8px; border:1px solid #ddd; font-size:.82rem;
+    font-family:Arial; box-shadow:0 2px 8px rgba(0,0,0,.12); background:rgba(255,255,255,.97);
+  }
+  .search-results{
+    max-height:180px; overflow:auto; margin-top:6px; font-size:.8rem;
+    background:rgba(255,255,255,.97); border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.12);
+  }
+  .search-results div{padding:6px 10px; cursor:pointer;}
+  .search-results div:hover{background:var(--rosa);}
+
+  .vmap-legend-float{ top:auto; bottom:92px; left:12px; right:auto; width:190px; z-index:1000; }
+  .ramp{display:flex; height:14px; border-radius:4px; overflow:hidden; margin-bottom:4px;}
+  .ramp div{flex:1;}
+  .ramp-labels{display:flex; justify-content:space-between; font-size:.66rem; color:#888;}
+
+  .vmap-info-float{
+    position:absolute; right:12px; top:198px; z-index:600; width:250px;
+    background:rgba(255,255,255,.97); border-radius:10px; padding:14px 16px;
+    box-shadow:0 3px 14px rgba(0,0,0,.16); max-height:calc(100% - 212px); overflow:auto;
+  }
+  .vmap-info-float h2{margin:0 0 2px; color:var(--rojo); font-size:1rem;}
+  .vmap-info-float .alc{font-size:.74rem; color:#888; margin-bottom:10px;}
+  .info-empty{color:#999; font-size:.8rem; text-align:center; padding:10px 4px;}
+  .info-stats{display:flex; gap:8px; margin-bottom:10px;}
+  .info-stat{ flex:1; background:var(--rojo); color:#fff; border-radius:8px; padding:8px 6px; text-align:center; }
+  .info-stat .n{display:block; font-weight:700; font-size:1.02rem;}
+  .info-stat .l{font-size:.6rem; opacity:.9;}
+  .spark-wrap{margin-top:4px;}
+  .spark-wrap svg{width:100%; height:56px; display:block;}
+  .spark-caption{font-size:.62rem; color:#999; margin-top:4px;}
+
+  .tl-caption{display:flex; justify-content:space-between; font-size:.68rem; color:#888; padding:0 2px;}
+  .vmap-stats-note{font-size:.74rem; color:#777; margin-top:12px; line-height:1.5;}
+  .vmap-stats-note b{color:var(--oscuro);}
+
+  footer{
+    text-align:center; font-size:.72rem; color:#999; padding:30px 20px 50px;
+  }
+
+  @media (max-width: 880px){
+    .intro-grid{grid-template-columns:1fr;}
+    .charts-row{grid-template-columns:1fr;}
+  }
+  @media (max-width: 640px){
+    #vmap{ height:460px; }
+    .vmap-search-float{ width:170px; }
+    .vmap-info-float{ width:190px; font-size:.92em; }
+  }
+  @media (max-width: 520px){
+    header.banner{border-radius:0 0 24px 24px; padding:24px 14px 28px;}
+    .map-legend-float{width:168px; font-size:.9em;}
+  }
+</style>
+</head>
+<body>
+
+<header class="banner">
+  <div class="wrap">
+    <h1>Expansión territorial de la pandemia de SARS-CoV-2 (COVID-19)<br>en colonias de la Ciudad de México</h1>
+    <p class="subtitle">Rodolfo Gerardo Ortiz Morales - Universidad Abierta y a Distancia de México UnADM</p>
+    <p class="subtitle">Mapa interactivo — versión web del <a href="img/postercovid19Igeo.pdf" target="_blank">póster original de investigación (agosto 2020)</a></p>
+  </div>
+</header>
+
+<section id="intro">
+  <div class="intro-grid">
+    <div>
+      <p>La Ciudad de México vivió sus primeros contagios de SARS-CoV-2 al final de febrero del 2020. Dos meses después, en el punto más alto de la epidemia, la ciudad registraba más de 20,000 contagios y sobrepasaba ya los 3,000 decesos.</p>
+      <p>En lo mapas podrás recorrer el acumulado de contagios de febrero a julio 2020, y de septiembre de 2020 a febrero de 2022, así como cifras de ocupación de los afectados. Se muestran seis cortes mensuales con los que se puede apreciar la expansión territorial de la pandemia desde su inicio y durante los siguientes seis meses, para identificar la magnitud territorial de la pandemia y las afectaciones locales.</p>
+    </div>
+    <div class="stat-cards">
+      <div class="stat-card"><span class="num">+20,000</span><span class="lab">contagios acumulados en el pico de la epidemia (abril 2020)</span></div>
+      <div class="stat-card"><span class="num">+3,000</span><span class="lab">decesos registrados para ese mismo punto</span></div>
+      <div class="stat-card"><span class="num">Febrero – Julio 2020</span><span class="lab">periodo cubierto por el mapa interactivo</span></div>
+    </div>
+  </div>
+</section>
+
+<section id="mapa">
+  <h2 class="section-title">Mapa interactivo de contagios de SARS-CoV-2 (imagen raster)</h2>
+	<p style="font-size:.85rem; color:#666; max-width:900px; margin:-6px 0 16px;">
+    Mapa coroplético con gráficos que muestra cronológicamente los casos positivos de SARS-CoV-2 por colonia de febrero a julio de 2022.
+  </p>
+  <div class="map-card">
+    <div class="map-stage-outer" id="mapStageOuter">
+      <div class="map-stage" id="mapStage">
+        <div class="map-zoom-inner" id="zoomInner">
+          <!-- map layers injected by JS -->
+          <div class="toponimos-layer" id="toponimosLayer"></div>
+        </div>
+        <div class="north-arrow">
+          <svg width="22" height="26" viewBox="0 0 22 26">
+            <polygon points="11,0 22,26 11,19 0,26" fill="#434343"/>
+          </svg>
+          N
+        </div>
+        <div class="scale-bar" id="scaleBar">
+          <svg width="120" height="8" viewBox="0 0 120 8" id="scaleBarSvg">
+            <rect x="0" y="0" width="30" height="8" fill="#434343"/>
+            <rect x="30" y="0" width="30" height="8" fill="#fff" stroke="#434343" stroke-width="1"/>
+            <rect x="60" y="0" width="60" height="8" fill="#434343"/>
+          </svg>
+          <div class="lab-row" id="scaleBarLabels"><span>0</span><span>3</span><span>6</span><span>12</span></div>
+          <div class="cap">Kilómetros</div>
+        </div>
+        <div class="map-zoom-controls">
+          <button class="zbtn" id="zoomIn" title="Acercar">+</button>
+          <button class="zbtn" id="zoomOut" title="Alejar">–</button>
+          <button class="zbtn" id="zoomReset" title="Restablecer vista" style="font-size:12px;">⤾</button>
+          <button class="zbtn" id="legendToggle" title="Mostrar/ocultar simbología" style="font-size:13px;">ⓘ</button>
+          <button class="zbtn" id="fsToggle" title="Pantalla completa" style="font-size:13px;">⛶</button>
+        </div>
+        <div class="month-badge" id="monthBadge">Acumulado</div>
+
+        <div class="map-legend-float" id="legendFloat">
+          <button class="legend-close" id="legendClose" title="Cerrar">✕</button>
+          <h3>Simbología</h3>
+          <p style="font-size:.68rem; margin:0 0 8px;">Personas contagiadas por colonia (tamaño del punto)</p>
+          <div class="symbology-row">
+            <div class="symbology-item">
+              <svg width="20" height="33" viewBox="0 0 34 56">
+                <polygon points="21,5 5,32 13,53 32,36" fill="#F4CCCC" stroke="#595959" stroke-width="1.6"/>
+                <circle cx="17" cy="30" r="1.4" fill="#EA3323"/>
+              </svg>1–100
+            </div>
+            <div class="symbology-item">
+              <svg width="26" height="43" viewBox="0 0 34 56">
+                <polygon points="21,5 5,32 13,53 32,36" fill="#F4CCCC" stroke="#595959" stroke-width="1.6"/>
+                <circle cx="17" cy="30" r="7" fill="#EA3323"/>
+              </svg>500
+            </div>
+            <div class="symbology-item">
+              <svg width="40" height="40" viewBox="0 0 40 40">
+                <circle cx="20" cy="20" r="18" fill="#EA3323"/>
+              </svg>14,000
+            </div>
+          </div>
+          <hr style="border:none; border-top:1px solid #eee; margin:10px 0;">
+          <p style="font-size:.66rem; margin:0; color:#777;">Arrastra la línea de tiempo (o pulsa ▶) para recorrer mes a mes.</p>
+        </div>
+
+        <div class="timeline map-timeline-float" id="rasterTimeline">
+          <div class="timeline-top">
+            <span class="timeline-title" id="tlTitle">Contagios acumulados · 1 feb – 31 jul 2020</span>
+            <button class="play-btn" id="playBtn">▶ Reproducir evolución</button>
+          </div>
+          <input type="range" min="0" max="6" step="1" value="6" class="tl-range" id="tlRange">
+          <div class="tl-labels" id="tlLabels"></div>
+			<div class="tl-labels"> </br>Investigación y Cartografía: Rodolfo Gerardo Ortiz Morales, UnADM, TSU Proyectos Sociales. Fuentes estadísticas y cartográficas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx. Agosto 2020.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="graficas">
+  <h2 class="section-title">Contagios, decesos y ocupación</h2>
+  <div class="charts-row">
+    <div class="chart-card">
+      <h3>Contagios  y decesos  acumulados por alcaldía</h3>
+      <div class="chart-sub">Cartograma por alcaldías de contagios y decesoso acumulados de personas de febrero–julio 2020</div>
+      <div class="cartogram" id="cartogram"></div>
+      <div class="cg-legend">
+        <span><span class="sw" style="background:#CC0000;"></span>Contagios acumulados</span>
+        <span><span class="sw" style="background:#434343;"></span>Decesos acumulados</span>
+		  <span><span class="sw" style="background:#434343;">
+      </div>
+		<div class="cg-legend">Visualización: Rodolfo Gerardo Ortiz Morales, UnADM, TSU Proyectos Sociales. Fuentes estadísticas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx. Agosto 2020.</div>
+    </div>
+    <div class="chart-card">
+      <h3>Ocupación de los contagiados</h3>
+      <div class="chart-sub">Gráfica con la cifras  contagiados acumulados por ocupación, febrero–julio  2020</div>
+      <div class="donut-wrap" id="donutWrap"></div>
+      <div class="placeholder-note">Visualización: Rodolfo Gerardo Ortiz Morales, UnADM, TSU Proyectos Sociales. Fuentes estadísticas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx. Agosto 2020.</div>
+    </div>
+  </div>
+</section>
+
+<section id="mapa-vectorial">
+  <h2 class="section-title">Mapa vectorial de casos positivos de SARS-CoV-2 por colonia (SIG)</h2>
+  <p style="font-size:.85rem; color:#666; max-width:900px; margin:-6px 0 16px;">
+    Mapa coroplético que muestra cronológicamente los casos positivos de de SARS-CoV-2 de septiembre de 2020 a febrero 2022. Cada colonia es un polígono vectorial: haz clic para ver su ficha informativa correspondiente.
+  </p>
+  <div class="vmap-card">
+    <div class="vmap-stage-outer" id="vmapStageOuter">
+      <div id="vmap"></div>
+
+      <div class="map-zoom-controls vmap-zoom-controls">
+        <button class="zbtn" id="vZoomIn" title="Acercar">+</button>
+        <button class="zbtn" id="vZoomOut" title="Alejar">–</button>
+        <button class="zbtn" id="vZoomReset" title="Restablecer vista" style="font-size:12px;">⤾</button>
+        <button class="zbtn" id="vLegendToggle" title="Mostrar/ocultar leyenda" style="font-size:13px;">ⓘ</button>
+        <button class="zbtn" id="vFsToggle" title="Pantalla completa" style="font-size:13px;">⛶</button>
+      </div>
+
+      <div class="vmap-search-float" id="vSearchFloat">
+        <input type="text" id="searchInput" placeholder="Buscar colonia por nombre…">
+        <div class="search-results" id="searchResults"></div>
+      </div>
+
+      <div class="map-legend-float vmap-legend-float" id="vLegendFloat">
+        <button class="legend-close" id="vLegendClose" title="Cerrar">✕</button>
+        <h3>Casos positivos por colonia</h3>
+        <div class="ramp" id="ramp"></div>
+        <div class="ramp-labels"><span>0</span><span id="rampMax">máx.</span></div>
+      </div>
+
+      <div class="vmap-info-float" id="infoCard">
+        <div class="info-empty">Haz clic en una colonia del mapa (o búscala el espacio superior izquierdo del mapa) para ver su ficha informativa correspondiente. Arrastra la línea de tiempo (o pulsa ▶) para recorrer mes a mes.</div>
+      </div>
+
+      <div class="timeline map-timeline-float" id="vectorTimeline">
+        <div class="timeline-top">
+          <span class="timeline-title" id="vTlTitle">Acumulado · septiembre 2020 – febrero 2022</span>
+          <button class="play-btn" id="vPlayBtn">▶ Reproducir evolución</button>
+        </div>
+        <input type="range" min="0" max="18" step="1" value="18" class="tl-range" id="vTlRange">
+        <div class="tl-caption"><span id="vTlFrom">sep 2020</span><span id="vTlNow">Acumulado</span><span id="vTlTo">feb 2022</span></div>
+		  	<div class="vmap-stats-note">
+      <b>Cobertura de datos:</b> 1,725 de 1,814 colonias del marco geográfico cuentan con registros COVID (95%).</br> Investigación y Cartografía: Rodolfo Gerardo Ortiz Morales, UnADM, TSU Proyectos Sociales. Fuente de casos: base mensual por colonia proporcionada para este proyecto. Fuentes estadísticas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx.Fuente de polígonos: marco geográfico (colonias CDMX) Instituto Electoral de la Ciudad de México IECM. Agosto 2025. </div>
+      </div>
+	
+    </div>
+   <!-- Aqui para poner texto debajo del mapa  -->
+  </div>
+</section>
+
+<section id="fuentes">
+  <div class="credits-card">
+    <h3>Cómo citar este mapa:</h3>
+    <p>Ortiz Morales, R. G. (2020). Expansión territorial de la pandemia de SARS-CoV-2 (COVID-19)<br>
+    en colonias de la Ciudad de México [Mapa]. URL: https://rodoger.github.io/Mapas/guerrero_normales_narcotrafico_mapa.html.</p>
+  </div>
+</section>
+
+<section id="recurso-original">
+  <div class="original-card">
+    <h2 class="section-title" style="margin-bottom:6px;">Fuentes</h2>
+    <p style="font-size:.85rem; color:#666; margin-top:0;">Enlaces a las bases de datos y fuentes originales usadas para construir el póster y este mapa interactivo:</p>
+    <div class="original-links">
+      <a href="https://datos.cdmx.gob.mx/explore/dataset/covid-19-sinave-ciudad-de-mexico-a-nivel-colonia/table/?disjunctive.colonia" target="_blank" rel="noopener"><b>Base COVID por colonia</b>SINAVE · Ciudad de México (nivel colonia)</a>
+      <a href="https://archivo.datos.cdmx.gob.mx/sinave-colonias/" target="_blank" rel="noopener"><b>Archivo histórico SINAVE (no accesible despues del 2022)</b>Cortes mensuales por colonia</a>
+      <a href="https://datos.cdmx.gob.mx/explore/dataset/base-covid-sinave/table/" target="_blank" rel="noopener"><b>Base de datos completa COVID</b>Portal de datos CDMX</a>
+      <a href="https://datos.cdmx.gob.mx/dataset/catalogo-de-colonias-datos-abiertos" target="_blank" rel="noopener"><b>Polígonos de colonias CDMX, Catálogo de colonias (Datos abiertos)</b>Porta de daros abiertos, Gobierno de la Ciudad de México, 2025</a>
+      <a href="https://www.coneval.org.mx/Medicion/IRS/Paginas/Rezago_social_AGEB_2010.aspx" target="_blank" rel="noopener"><b>Índice de rezago social</b>CONEVAL · AGEB 2010</a>
+    </div>
+    <div class="original-placeholder" id="pptxSlot">
+      📎 Otros mapas del autor en Cartografías TT, EL Territorio, trazado.
+    </div>
+  </div>
+</section>
+
+<footer>
+  Investigación y producción: Mtro. Rodolfo Gerardo Ortiz Morales.
+Realizado en TSU en Proyectos sociales, Modelación de datos geoespaciales,<br>
+Universidad Abierta y a Distancia de México, 2020.
+Ciudad de México. Versión original agosto 2020 · Adaptación web realizada con Claude.ai, 2026.
+</footer>
+
+<div class="donut-tip" id="donutTip"></div>
+
+<script>
+/* ================= DATA ================= */
+const MONTHS = [
+  {key:'febrero',   label:'Febrero',   title:'Contagios en febrero 2020'},
+  {key:'marzo',      label:'Marzo',     title:'Contagios en marzo 2020'},
+  {key:'abril',      label:'Abril',     title:'Contagios en abril 2020'},
+  {key:'mayo',       label:'Mayo',      title:'Contagios en mayo 2020'},
+  {key:'junio',      label:'Junio',     title:'Contagios en junio 2020'},
+  {key:'julio',      label:'Julio',     title:'Contagios en julio 2020'},
+  {key:'acumulado',  label:'Acumulado', title:'Contagios acumulados · 1 feb – 31 jul 2020'}
+];
+
+const LABELS = {"febrero": [{"text": "AGRICULTURA", "x": 43.28, "y": 29.95, "w": 15.07, "h": 1.43}, {"text": "ABRAHAM GONZÁLEZ", "x": 33.88, "y": 42.97, "w": 20.45, "h": 1.43}, {"text": "ACULCO (PBLO)", "x": 57.61, "y": 45.57, "w": 15.97, "h": 1.69}, {"text": "SAN JUAN DE ARAGÓN (PBLO)", "x": 56.87, "y": 25.78, "w": 39.25, "h": 2.21}], "marzo": [{"text": "ACUEDUCTO DE GUADALUPE (RDCIAL)", "x": 47.01, "y": 14.97, "w": 32.99, "h": 1.69}, {"text": "AGUILERA", "x": 45.52, "y": 25.26, "w": 11.94, "h": 1.43}, {"text": "AGRICULTURA", "x": 43.28, "y": 29.95, "w": 15.07, "h": 1.43}, {"text": "ALGARÍN", "x": 49.25, "y": 39.06, "w": 10.75, "h": 1.43}, {"text": "ABRAHAM GONZÁLEZ", "x": 33.88, "y": 42.97, "w": 20.45, "h": 1.43}, {"text": "ACULCO (PBLO)", "x": 57.61, "y": 45.57, "w": 15.97, "h": 1.69}, {"text": "ACACIAS", "x": 41.34, "y": 47.53, "w": 10.75, "h": 1.43}, {"text": "ABDIAS GARCÍA SOTO", "x": 13.43, "y": 50.0, "w": 20.9, "h": 1.43}, {"text": "AHUACATITLA", "x": 43.43, "y": 79.43, "w": 14.93, "h": 1.43}], "abril": [{"text": "ACUEDUCTO DE GUADALUPE (RDCIAL)", "x": 47.01, "y": 14.97, "w": 32.99, "h": 1.69}, {"text": "AGUILERA", "x": 45.52, "y": 25.26, "w": 11.94, "h": 1.43}, {"text": "AARÓN SÁENZ", "x": 53.28, "y": 37.5, "w": 15.07, "h": 1.43}, {"text": "ALGARÍN", "x": 49.25, "y": 39.06, "w": 10.75, "h": 1.43}, {"text": "ABRAHAM GONZÁLEZ", "x": 33.88, "y": 42.97, "w": 20.45, "h": 1.43}, {"text": "ACULCO (PBLO)", "x": 57.61, "y": 45.57, "w": 15.97, "h": 1.69}, {"text": "ACACIAS", "x": 41.34, "y": 47.53, "w": 10.75, "h": 1.43}, {"text": "ALTOS TEPETLICA", "x": 47.31, "y": 75.13, "w": 18.51, "h": 1.43}, {"text": "AHUACATITLA", "x": 43.43, "y": 79.43, "w": 14.93, "h": 1.43}], "mayo": [{"text": "ACUEDUCTO DE GUADALUPE (RDCIAL)", "x": 47.01, "y": 14.97, "w": 32.99, "h": 1.69}, {"text": "AGUILERA", "x": 45.52, "y": 25.26, "w": 11.94, "h": 1.43}, {"text": "AGRICULTURA", "x": 43.28, "y": 29.95, "w": 15.07, "h": 1.43}, {"text": "AARÓN SÁENZ", "x": 53.28, "y": 37.5, "w": 15.07, "h": 1.43}, {"text": "ALGARÍN", "x": 49.25, "y": 39.06, "w": 10.75, "h": 1.43}, {"text": "ABRAHAM GONZÁLEZ", "x": 33.88, "y": 42.97, "w": 20.45, "h": 1.43}, {"text": "ACULCO (PBLO)", "x": 57.61, "y": 45.57, "w": 15.97, "h": 1.69}, {"text": "ACACIAS", "x": 41.34, "y": 47.53, "w": 10.75, "h": 1.43}, {"text": "ABDIAS GARCÍA SOTO", "x": 13.43, "y": 50.0, "w": 20.9, "h": 1.43}, {"text": "ATACAXCO", "x": 23.28, "y": 57.55, "w": 12.54, "h": 1.43}, {"text": "AGRÍCOLA METROPOLITANA", "x": 69.7, "y": 62.5, "w": 25.97, "h": 1.43}, {"text": "ALTOS TEPETLICA", "x": 47.31, "y": 75.13, "w": 18.51, "h": 1.43}, {"text": "AHUACATITLA", "x": 43.43, "y": 79.43, "w": 14.93, "h": 1.43}], "junio": [{"text": "ACUEDUCTO DE GUADALUPE (RDCIAL)", "x": 47.01, "y": 14.97, "w": 32.99, "h": 1.69}, {"text": "AGUILERA", "x": 45.52, "y": 25.26, "w": 11.94, "h": 1.43}, {"text": "AGRICULTURA", "x": 43.28, "y": 29.95, "w": 15.07, "h": 1.43}, {"text": "AARÓN SÁENZ", "x": 53.28, "y": 37.5, "w": 15.07, "h": 1.43}, {"text": "ALGARÍN", "x": 49.25, "y": 39.06, "w": 10.75, "h": 1.43}, {"text": "ABRAHAM GONZÁLEZ", "x": 33.88, "y": 42.97, "w": 20.45, "h": 1.43}, {"text": "ACULCO (PBLO)", "x": 57.61, "y": 45.57, "w": 15.97, "h": 1.69}, {"text": "ACACIAS", "x": 41.34, "y": 47.53, "w": 10.75, "h": 1.43}, {"text": "ATACAXCO", "x": 23.28, "y": 57.55, "w": 12.54, "h": 1.43}, {"text": "AGRÍCOLA METROPOLITANA", "x": 69.7, "y": 62.5, "w": 25.97, "h": 1.43}, {"text": "ALTOS TEPETLICA", "x": 47.31, "y": 75.13, "w": 18.51, "h": 1.43}, {"text": "AHUACATITLA", "x": 43.43, "y": 79.43, "w": 14.93, "h": 1.43}], "julio": [{"text": "ACUEDUCTO DE GUADALUPE (RDCIAL)", "x": 47.01, "y": 14.97, "w": 32.99, "h": 1.69}, {"text": "AGUILERA", "x": 45.52, "y": 25.26, "w": 11.94, "h": 1.43}, {"text": "AGRICULTURA", "x": 43.28, "y": 29.95, "w": 15.07, "h": 1.43}, {"text": "AARÓN SÁENZ", "x": 53.28, "y": 37.5, "w": 15.07, "h": 1.43}, {"text": "ALGARÍN", "x": 49.25, "y": 39.06, "w": 10.75, "h": 1.43}, {"text": "ABRAHAM GONZÁLEZ", "x": 33.88, "y": 42.97, "w": 20.45, "h": 1.43}, {"text": "ACULCO (PBLO)", "x": 57.61, "y": 45.57, "w": 15.97, "h": 1.69}, {"text": "ACACIAS", "x": 41.34, "y": 47.53, "w": 10.75, "h": 1.43}, {"text": "ABDIAS GARCÍA SOTO", "x": 13.43, "y": 50.0, "w": 20.9, "h": 1.43}, {"text": "ATACAXCO", "x": 23.28, "y": 57.55, "w": 12.54, "h": 1.43}, {"text": "AGRÍCOLA METROPOLITANA", "x": 69.7, "y": 62.5, "w": 25.97, "h": 1.43}, {"text": "ALTOS TEPETLICA", "x": 47.31, "y": 75.13, "w": 18.51, "h": 1.43}, {"text": "AHUACATITLA", "x": 43.43, "y": 79.43, "w": 14.93, "h": 1.43}], "acumulado": [{"text": "ACUEDUCTO DE GUADALUPE (RDCIAL)", "x": 47.01, "y": 14.97, "w": 32.99, "h": 1.69}, {"text": "AGUILERA", "x": 45.52, "y": 25.26, "w": 11.94, "h": 1.43}, {"text": "AGRICULTURA", "x": 43.28, "y": 29.95, "w": 15.07, "h": 1.43}, {"text": "AARÓN SÁENZ", "x": 53.28, "y": 37.5, "w": 15.07, "h": 1.43}, {"text": "ALGARÍN", "x": 49.25, "y": 39.06, "w": 10.75, "h": 1.43}, {"text": "ABRAHAM GONZÁLEZ", "x": 33.88, "y": 42.97, "w": 20.45, "h": 1.43}, {"text": "ACULCO (PBLO)", "x": 57.61, "y": 45.57, "w": 15.97, "h": 1.69}, {"text": "ACACIAS", "x": 41.34, "y": 47.53, "w": 10.75, "h": 1.43}, {"text": "ABDIAS GARCÍA SOTO", "x": 13.43, "y": 50.0, "w": 20.9, "h": 1.43}, {"text": "ATACAXCO", "x": 23.28, "y": 57.55, "w": 12.54, "h": 1.43}, {"text": "AGRÍCOLA METROPOLITANA", "x": 69.7, "y": 62.5, "w": 25.97, "h": 1.43}, {"text": "ALTOS TEPETLICA", "x": 47.31, "y": 75.13, "w": 18.51, "h": 1.43}, {"text": "AHUACATITLA", "x": 43.43, "y": 79.43, "w": 14.93, "h": 1.43}]};
+
+// Posiciones EXACTAS tomadas del PPTX original (cartografía real, no recalculada)
+const CARTOGRAM_DATA = [{"name": "IZTAPALAPA", "contagios": 12228, "red": {"x": 0.5399581242899227, "y": 0.48263039361464743, "w": 0.3021086154372065, "h": 0.31847651799237375}, "decesos": 1497, "dark": {"x": 0.7139423995334855, "y": 0.6905705171116627, "w": 0.11584289319431737, "h": 0.09896077083938082}}, {"name": "GUSTAVO A. MADERO", "contagios": 9395, "red": {"x": 0.26042921346055237, "y": 0.0, "w": 0.3021086154372065, "h": 0.24614343346978432}, "decesos": 1313, "dark": {"x": 0.43292773046721833, "y": 0.145545399074661, "w": 0.11582429293894089, "h": 0.08834262424246014}}, {"name": "TLALPAN", "contagios": 6273, "red": {"x": 0.20994510411115916, "y": 0.8016726598460928, "w": 0.24906948452157127, "h": 0.1983273401539072}, "decesos": 387, "dark": {"x": 0.3857916670855913, "y": 0.9397641037185358, "w": 0.06088039533083319, "h": 0.0487091461644639}}, {"name": "ÁLVARO OBREGÓN", "contagios": 5899, "red": {"x": 0.1159120157649732, "y": 0.5907147187352515, "w": 0.2250281517378671, "h": 0.2104235410508107}, "decesos": 597, "dark": {"x": 0.2604302188797619, "y": 0.7167716707246514, "w": 0.06702023908868802, "h": 0.07273888299773504}}, {"name": "XOCHIMILCO", "contagios": 5248, "red": {"x": 0.45845105116578355, "y": 0.8011244369669576, "w": 0.24906948452157127, "h": 0.1769765150303411}, "decesos": 339, "dark": {"x": 0.6335531012155519, "y": 0.9176991818865778, "w": 0.06088039533083319, "h": 0.0487091461644639}}, {"name": "COYOACÁN", "contagios": 5237, "red": {"x": 0.3409042237660993, "y": 0.5907137313910298, "w": 0.19839761313479656, "h": 0.2104235410508107}, "decesos": 436, "dark": {"x": 0.4756208463618906, "y": 0.7213941695349017, "w": 0.052151597108414355, "h": 0.06811169430243143}}, {"name": "AZCAPOTZALCO", "contagios": 4556, "red": {"x": 0.15938659374026, "y": 0.24625722489134277, "w": 0.21555936497722725, "h": 0.17332334140980907}, "decesos": 502, "dark": {"x": 0.3128942500075406, "y": 0.333244225517319, "w": 0.052151597108414355, "h": 0.07647326568050726}}, {"name": "CUAUHTEMOC", "contagios": 4372, "red": {"x": 0.37496455897286374, "y": 0.246256237547121, "w": 0.19839761313479656, "h": 0.17332334140980907}, "decesos": 523, "dark": {"x": 0.5056632750525332, "y": 0.3259805809138463, "w": 0.052151597108414355, "h": 0.0837796129215713}}, {"name": "TLAHUAC", "contagios": 4070, "red": {"x": 0.8427318245342396, "y": 0.6261329774944758, "w": 0.15726817546576044, "h": 0.2070139946169993}, "decesos": 210, "dark": {"x": 0.9410233659424297, "y": 0.7707542223775644, "w": 0.04201697147625703, "h": 0.046923040467290275}}, {"name": "MIGUEL HIDALGO", "contagios": 3180, "red": {"x": 0.2182986296136174, "y": 0.4203610619084574, "w": 0.13714722353485287, "h": 0.17129385536197025}, "decesos": 252, "dark": {"x": 0.2978594625028906, "y": 0.5367551228354946, "w": 0.04667734086727461, "h": 0.04375712122019948}}, {"name": "MAGDALENA CONTRERAS", "contagios": 2642, "red": {"x": 0.07898598445621902, "y": 0.8016726598460928, "w": 0.13093348146509687, "h": 0.16122738734896103}, "decesos": 139, "dark": {"x": 0.15193191301113, "y": 0.9219543886463313, "w": 0.046973185469681586, "h": 0.029550225213216985}}, {"name": "BENITO JUÁREZ", "contagios": 2614, "red": {"x": 0.35607499421883954, "y": 0.41942777478283366, "w": 0.18330677350921468, "h": 0.17129385536197025}, "decesos": 244, "dark": {"x": 0.47150440876323385, "y": 0.5517785525138771, "w": 0.05622002593981561, "h": 0.027764119516043358}}, {"name": "IZTACALCO", "contagios": 3656, "red": {"x": 0.539302590965303, "y": 0.41942851529099995, "w": 0.32578020530660257, "h": 0.06267241498472578}, "decesos": 437, "dark": {"x": 0.7727531394214818, "y": 0.42872707633553114, "w": 0.08107524557364193, "h": 0.04408171063310486}}, {"name": "MILPA ALTA", "contagios": 2444, "red": {"x": 0.7075544685856768, "y": 0.8016736471903145, "w": 0.13455826907028887, "h": 0.15619390650640094}, "decesos": 74, "dark": {"x": 0.7979351202984084, "y": 0.9302315420934462, "w": 0.03306622696333236, "h": 0.01574937451743551}}, {"name": "CUAJIMALPA DE MORELOS", "contagios": 1978, "red": {"x": 0.0, "y": 0.670242827437901, "w": 0.11584289319431737, "h": 0.1314335349490234}, "decesos": 124, "dark": {"x": 0.061153869355827915, "y": 0.7707532350333426, "w": 0.04201697147625703, "h": 0.018753122476101333}}, {"name": "VENUSTIANO CARRANZA", "contagios": 3991, "red": {"x": 0.5733616693980556, "y": 0.24624562359673702, "w": 0.17213681744603412, "h": 0.17332334140980907}, "decesos": 432, "dark": {"x": 0.6678275907139481, "y": 0.3544755819900515, "w": 0.06369129608590302, "h": 0.05698975531635496}}];
+
+const OCCUPATION_DATA = [
+  {name:'Empleados', value:26163},
+  {name:'Hogar', value:14264},
+  {name:'Otros', value:13764},
+  {name:'Enfermeras', value:5432},
+  {name:'Estudiantes', value:5284},
+  {name:'Comerciantes de mercados fijos o ambulantes', value:5202},
+  {name:'Desempleados', value:4307},
+  {name:'Otros trabajadores de la salud', value:4186},
+  {name:'Médicos', value:4036},
+  {name:'Otros profesionistas', value:3197},
+  {name:'Choferes', value:2609},
+  {name:'Obreros', value:1390},
+];
+
+/* ================= MAP TIMELINE ================= */
+const zoomInner = document.getElementById('zoomInner');
+const toponimosLayer = document.getElementById('toponimosLayer');
+const mapStage = document.getElementById('mapStage');
+const monthBadge = document.getElementById('monthBadge');
+const tlTitle = document.getElementById('tlTitle');
+const tlRange = document.getElementById('tlRange');
+const tlLabels = document.getElementById('tlLabels');
+const playBtn = document.getElementById('playBtn');
+
+const layerEls = {};
+MONTHS.forEach(m=>{
+  const img = document.createElement('img');
+  img.className = 'map-layer';
+  img.src = 'img/' + m.key + '.png';
+  img.alt = m.title;
+  img.draggable = false;
+  zoomInner.insertBefore(img, toponimosLayer);
+  layerEls[m.key] = img;
+});
+
+// build timeline text labels
+MONTHS.forEach((m,i)=>{
+  const span = document.createElement('span');
+  span.textContent = m.label;
+  span.dataset.idx = i;
+  span.addEventListener('click', ()=> setMonth(i));
+  tlLabels.appendChild(span);
+});
+
+// build toponimo spans (all months, toggled visible)
+const topoEls = {};
+MONTHS.forEach(m=>{
+  topoEls[m.key] = (LABELS[m.key]||[]).map(l=>{
+    const el = document.createElement('span');
+    el.className = 'toponimo';
+    el.textContent = l.text;
+    el.style.left = l.x + '%';
+    el.style.top = l.y + '%';
+    toponimosLayer.appendChild(el);
+    return el;
+  });
+});
+
+let currentIdx = 6;
+function setMonth(idx){
+  currentIdx = idx;
+  tlRange.value = idx;
+  const m = MONTHS[idx];
+  Object.values(layerEls).forEach(el=>el.classList.remove('active'));
+  layerEls[m.key].classList.add('active');
+  Object.entries(topoEls).forEach(([k,arr])=>{
+    arr.forEach(el=>el.classList.toggle('show', k===m.key));
+  });
+  monthBadge.textContent = m.label;
+  tlTitle.textContent = m.title;
+  [...tlLabels.children].forEach((s,i)=>s.classList.toggle('current', i===idx));
+}
+tlRange.addEventListener('input', e=> setMonth(+e.target.value));
+setMonth(6);
+
+let playing = false, playTimer = null;
+playBtn.addEventListener('click', ()=>{
+  playing = !playing;
+  if(playing){
+    playBtn.textContent = '⏸ Pausar';
+    let i = 0;
+    setMonth(0);
+    playTimer = setInterval(()=>{
+      i++;
+      if(i>6){ clearInterval(playTimer); playing=false; playBtn.textContent='▶ Reproducir evolución'; return; }
+      setMonth(i);
+    }, 1100);
+  } else {
+    clearInterval(playTimer);
+    playBtn.textContent = '▶ Reproducir evolución';
+  }
+});
+
+/* ---- zoom / pan ---- */
+let scale = 1, panX = 0, panY = 0;
+const MIN_SCALE=1, MAX_SCALE=5;
+const BASE_KM = 12; // km represented by the full 120px bar at scale=1 (matches original poster scale bar)
+
+function applyTransform(){
+  zoomInner.style.transform = `translate(${panX}px,${panY}px) scale(${scale})`;
+  updateScaleBar();
+}
+function clampPan(){
+  const stageRect = mapStage.getBoundingClientRect();
+  const maxX = 0, minX = -(stageRect.width*(scale-1));
+  const maxY = 0, minY = -(stageRect.height*(scale-1));
+  panX = Math.min(maxX, Math.max(minX, panX));
+  panY = Math.min(maxY, Math.max(minY, panY));
+}
+// zoom while keeping the content point under (ax,ay) — stage-local px — fixed on screen
+function zoomAt(newScale, ax, ay){
+  newScale = Math.min(MAX_SCALE, Math.max(MIN_SCALE, newScale));
+  if(newScale === scale) return;
+  const cx = (ax - panX)/scale;
+  const cy = (ay - panY)/scale;
+  panX = ax - cx*newScale;
+  panY = ay - cy*newScale;
+  scale = newScale;
+  if(scale===1){ panX=0; panY=0; }
+  clampPan();
+  applyTransform();
+}
+function stageCenter(){
+  const r = mapStage.getBoundingClientRect();
+  return {x:r.width/2, y:r.height/2};
+}
+function updateScaleBar(){
+  // the bar shrinks the represented distance as we zoom in, like a real map scale
+  const totalKm = BASE_KM/scale;
+  const fmt = v => v>=10 ? Math.round(v) : (Math.round(v*10)/10);
+  const labels = document.querySelectorAll('#scaleBarLabels span');
+  labels[0].textContent = '0';
+  labels[1].textContent = fmt(totalKm/4);
+  labels[2].textContent = fmt(totalKm/2);
+  labels[3].textContent = fmt(totalKm);
+}
+function resetView(){
+  scale=1; panX=0; panY=0; applyTransform();
+}
+document.getElementById('zoomIn').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const c = stageCenter();
+  zoomAt(scale+0.5, c.x, c.y);
+});
+document.getElementById('zoomOut').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  const c = stageCenter();
+  zoomAt(scale-0.5, c.x, c.y);
+});
+document.getElementById('zoomReset').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  resetView();
+});
+const legendFloat = document.getElementById('legendFloat');
+document.getElementById('legendToggle').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  legendFloat.classList.toggle('hidden');
+});
+document.getElementById('legendClose').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  legendFloat.classList.add('hidden');
+});
+const mapStageOuter = document.getElementById('mapStageOuter');
+document.getElementById('fsToggle').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  if(!document.fullscreenElement){
+    mapStageOuter.requestFullscreen().catch(()=>{});
+  } else {
+    document.exitFullscreen();
+  }
+});
+function fitRasterStage(){
+  if(document.fullscreenElement === mapStageOuter){
+    const ratio = 670/768;
+    let h = window.innerHeight, w = h*ratio;
+    if(w > window.innerWidth){ w = window.innerWidth; h = w/ratio; }
+    mapStage.style.width = w+'px';
+    mapStage.style.height = h+'px';
+  } else {
+    mapStage.style.width = '';
+    mapStage.style.height = '';
+  }
+  clampPan(); applyTransform();
+}
+document.addEventListener('fullscreenchange', fitRasterStage);
+window.addEventListener('resize', fitRasterStage);
+mapStage.addEventListener('wheel', (e)=>{
+  e.preventDefault();
+  const r = mapStage.getBoundingClientRect();
+  const ax = e.clientX - r.left, ay = e.clientY - r.top;
+  const delta = e.deltaY > 0 ? -0.3 : 0.3;
+  zoomAt(scale+delta, ax, ay);
+}, {passive:false});
+
+let dragging=false, startX=0, startY=0, startPanX=0, startPanY=0;
+mapStage.addEventListener('pointerdown', (e)=>{
+  if(scale<=1) return;
+  if(e.target.closest('.map-zoom-controls, .map-legend-float')) return; // don't hijack control clicks
+  dragging = true;
+  mapStage.classList.add('dragging');
+  startX=e.clientX; startY=e.clientY; startPanX=panX; startPanY=panY;
+  mapStage.setPointerCapture(e.pointerId);
+});
+mapStage.addEventListener('pointermove', (e)=>{
+  if(!dragging) return;
+  panX = startPanX + (e.clientX-startX);
+  panY = startPanY + (e.clientY-startY);
+  clampPan(); applyTransform();
+});
+['pointerup','pointerleave','pointercancel'].forEach(ev=>{
+  mapStage.addEventListener(ev, ()=>{ dragging=false; mapStage.classList.remove('dragging'); });
+});
+updateScaleBar();
+
+/* ================= CARTOGRAM (posición geográfica fija, tomada del original) ================= */
+// CARTOGRAM_DATA.red / .dark vienen como fracciones (0..1) del recuadro del cartograma,
+// extraídas directamente de las formas vectoriales del PPTX original: la posición de
+// cada rectángulo respeta la ubicación relativa real de cada alcaldía, no un layout calculado.
+function renderCartogram(){
+  const el = document.getElementById('cartogram');
+  const W = el.clientWidth || 500;
+  const H = el.clientHeight || 480;
+  el.innerHTML = '';
+  CARTOGRAM_DATA.forEach(r=>{
+    const cell = document.createElement('div');
+    cell.className = 'cg-cell';
+    const rw = r.red.w*W, rh = r.red.h*H;
+    cell.style.left = (r.red.x*W)+'px';
+    cell.style.top = (r.red.y*H)+'px';
+    cell.style.width = Math.max(0,rw-1.5)+'px';
+    cell.style.height = Math.max(0,rh-1.5)+'px';
+
+    const showText = rw>46 && rh>26;
+    if(showText){
+      const label = document.createElement('div');
+      label.className = 'cg-label';
+      label.innerHTML = r.name + '<span class="n">'+r.contagios.toLocaleString('es-MX')+'</span>';
+      cell.appendChild(label);
+    }
+    cell.title = r.name + ' — ' + r.contagios.toLocaleString('es-MX') + ' contagios, ' + r.decesos.toLocaleString('es-MX') + ' decesos';
+
+    // dark death sub-rectangle: posición y tamaño también tomados del original (no recalculados)
+    const dw = r.dark.w*W, dh = r.dark.h*H;
+    if(dw>4 && dh>4){
+      const d = document.createElement('div');
+      d.className = 'cg-desc';
+      d.style.position = 'absolute';
+      d.style.left = ((r.dark.x - r.red.x)*W)+'px';
+      d.style.top = ((r.dark.y - r.red.y)*H)+'px';
+      d.style.width = dw+'px';
+      d.style.height = dh+'px';
+      if(dw>26 && dh>13){
+        const s = document.createElement('span');
+        s.textContent = r.decesos.toLocaleString('es-MX');
+        d.appendChild(s);
+      }
+      cell.appendChild(d);
+    }
+    el.appendChild(cell);
+  });
+}
+renderCartogram();
+window.addEventListener('resize', ()=>{ renderCartogram(); });
+
+/* ================= DONUT CHART ================= */
+function renderDonut(){
+  const wrap = document.getElementById('donutWrap');
+  wrap.innerHTML = '';
+  const total = OCCUPATION_DATA.reduce((s,d)=>s+d.value,0);
+  const size = 260, r=100, cx=size/2, cy=size/2, strokeW = 46;
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox', `0 0 ${size} ${size}`);
+
+  const colors = OCCUPATION_DATA.map((d,i)=>{
+    const t = i/(OCCUPATION_DATA.length-1);
+    // shades of red -> dark red
+    const l = 62 - t*38;
+    return `hsl(0, 78%, ${l}%)`;
+  }).reverse();
+
+  let angleStart = -90;
+  const circumference = 2*Math.PI*r;
+  OCCUPATION_DATA.forEach((d,i)=>{
+    const frac = d.value/total;
+    const dash = frac*circumference;
+    const circle = document.createElementNS(svgNS,'circle');
+    circle.setAttribute('cx',cx); circle.setAttribute('cy',cy); circle.setAttribute('r',r);
+    circle.setAttribute('fill','none');
+    circle.setAttribute('stroke', colors[i]);
+    circle.setAttribute('stroke-width', strokeW);
+    circle.setAttribute('stroke-dasharray', `${dash} ${circumference-dash}`);
+    circle.setAttribute('stroke-dashoffset', -(angleStart+90)/360*circumference);
+    circle.style.cursor='pointer';
+    circle.addEventListener('mousemove', (e)=> showTip(e, d, frac));
+    circle.addEventListener('mouseleave', hideTip);
+    svg.appendChild(circle);
+    angleStart += frac*360;
+  });
+
+  const centerText = document.createElementNS(svgNS,'text');
+  centerText.setAttribute('x',cx); centerText.setAttribute('y',cy-4);
+  centerText.setAttribute('text-anchor','middle');
+  centerText.setAttribute('font-family','Arial'); centerText.setAttribute('font-size','15'); centerText.setAttribute('font-weight','700');
+  centerText.setAttribute('fill','#434343');
+  centerText.textContent = total.toLocaleString('es-MX');
+  svg.appendChild(centerText);
+  const centerText2 = document.createElementNS(svgNS,'text');
+  centerText2.setAttribute('x',cx); centerText2.setAttribute('y',cy+14);
+  centerText2.setAttribute('text-anchor','middle');
+  centerText2.setAttribute('font-family','Arial'); centerText2.setAttribute('font-size','9');
+  centerText2.setAttribute('fill','#888');
+  centerText2.textContent = 'contagiados registrados';
+  svg.appendChild(centerText2);
+
+  wrap.appendChild(svg);
+
+  const legend = document.createElement('div');
+  legend.className = 'donut-legend';
+  OCCUPATION_DATA.forEach((d,i)=>{
+    const row = document.createElement('div');
+    row.className = 'row';
+    row.innerHTML = `<span class="sw" style="background:${colors[i]}"></span><span class="lab">${d.name}</span><span class="val">${d.value.toLocaleString('es-MX')}</span>`;
+    legend.appendChild(row);
+  });
+  wrap.appendChild(legend);
+}
+const tip = document.getElementById('donutTip');
+function showTip(e,d,frac){
+  tip.style.opacity=1;
+  tip.style.left = (e.clientX+12)+'px';
+  tip.style.top = (e.clientY+12)+'px';
+  tip.textContent = `${d.name}: ${d.value.toLocaleString('es-MX')} (${(frac*100).toFixed(1)}%)`;
+}
+function hideTip(){ tip.style.opacity=0; }
+renderDonut();
+</script>
+
+<script src="lib/leaflet.js"></script>
+<script src="data/colonias_covid.js"></script>
+<script>
+(function(){
+  const map = L.map('vmap', {
+    center:[19.365,-99.14], zoom:10.4, zoomControl:false, preferCanvas:true, minZoom:9.5, maxZoom:16
+  });
+  map.attributionControl.setPrefix('');
+  L.control.scale({metric:true, imperial:false, position:'bottomright'}).addTo(map);
+
+  const gj = window.__COLONIAS_GEOJSON__;
+  const MONTHS = gj.months;
+  const STEPS = MONTHS.length + 1;
+  const MONTH_LABELS = {
+    '01':'ene','02':'feb','03':'mar','04':'abr','05':'may','06':'jun',
+    '07':'jul','08':'ago','09':'sep','10':'oct','11':'nov','12':'dic'
+  };
+  function fmtMonth(ym){ const [y,m]=ym.split('-'); return MONTH_LABELS[m]+' '+y; }
+
+  const RAMP = ['#fff5f0','#fdd6c6','#fca082','#fb6a4a','#e3231a','#a80000','#5e0000'];
+  function colorFor(v, max){
+    if(v<=0) return '#f2f2f2';
+    const t = Math.sqrt(v/max);
+    const idx = Math.min(RAMP.length-1, Math.floor(t*(RAMP.length-1)));
+    return RAMP[idx];
+  }
+  const rampEl = document.getElementById('ramp');
+  RAMP.forEach(c=>{ const d=document.createElement('div'); d.style.background=c; rampEl.appendChild(d); });
+
+  let vstep = MONTHS.length;
+  let maxForStep = 1;
+  function valueFor(feature, s){
+    if(s === MONTHS.length) return feature.properties.total || 0;
+    return feature.properties.monthly[MONTHS[s]] || 0;
+  }
+  function computeMax(s){
+    let m = 1;
+    gj.features.forEach(f=> m = Math.max(m, valueFor(f, s)));
+    return m;
+  }
+
+  let geoLayer, selectedLayer = null;
+  const baseStyle = (feature) => {
+    const v = valueFor(feature, vstep);
+    return { fillColor: colorFor(v, maxForStep), weight:0.6, color:'#9a9a9a', fillOpacity:0.92 };
+  };
+  const highlightStyle = { weight:2.4, color:'#1414c9', fillOpacity:0.95 };
+
+  function restyleAll(){
+    maxForStep = computeMax(vstep);
+    document.getElementById('rampMax').textContent = maxForStep.toLocaleString('es-MX');
+    geoLayer.eachLayer(l=> l.setStyle(baseStyle(l.feature)));
+    if(selectedLayer){ selectedLayer.setStyle(highlightStyle); updateInfoCard(selectedLayer.feature); }
+  }
+
+  function onEachFeature(feature, layer){
+    layer.bindTooltip(
+      feature.properties.nomut + ' — ' + valueFor(feature, vstep).toLocaleString('es-MX') + ' casos',
+      {sticky:true, className:'colonia-tip'}
+    );
+    layer.on('mouseover', ()=>{ if(layer!==selectedLayer) layer.setStyle({weight:1.6, color:'#434343'}); });
+    layer.on('mouseout', ()=>{ if(layer!==selectedLayer) layer.setStyle(baseStyle(feature)); });
+    layer.on('click', ()=>{
+      if(selectedLayer && selectedLayer!==layer) selectedLayer.setStyle(baseStyle(selectedLayer.feature));
+      selectedLayer = layer;
+      layer.setStyle(highlightStyle);
+      updateInfoCard(feature);
+      if(map.getZoom() < 12){ map.setView(layer.getBounds().getCenter(), 12.5, {animate:true}); }
+    });
+  }
+
+  geoLayer = L.geoJSON(gj, { style: baseStyle, onEachFeature }).addTo(map);
+  const initialBounds = geoLayer.getBounds();
+  map.fitBounds(initialBounds, {padding:[10,10]});
+  const initialView = { center: map.getCenter(), zoom: map.getZoom() };
+  maxForStep = computeMax(vstep);
+  document.getElementById('rampMax').textContent = maxForStep.toLocaleString('es-MX');
+
+  function refreshTooltips(){
+    geoLayer.eachLayer(l=>{
+      l.setTooltipContent(l.feature.properties.nomut + ' — ' + valueFor(l.feature, vstep).toLocaleString('es-MX') + ' casos');
+    });
+  }
+
+  function updateInfoCard(feature){
+    const p = feature.properties;
+    const card = document.getElementById('infoCard');
+    const total = p.total || 0;
+    const curVal = valueFor(feature, vstep);
+    const stepLabel = vstep===MONTHS.length ? 'Acumulado' : fmtMonth(MONTHS[vstep]);
+    const vals = MONTHS.map(m=> p.monthly[m]||0);
+    const maxV = Math.max(1,...vals);
+    const w=220,h=50,pad=4;
+    const stepX = (w-2*pad)/(vals.length-1);
+    const pts = vals.map((v,i)=> `${pad+i*stepX},${h-pad-(v/maxV)*(h-2*pad)}`).join(' ');
+    card.innerHTML = `
+      <h2>${p.nomut}</h2>
+      <div class="alc">${p.nomdt}</div>
+      <div class="info-stats">
+        <div class="info-stat"><span class="n">${curVal.toLocaleString('es-MX')}</span><span class="l">${stepLabel}</span></div>
+        <div class="info-stat"><span class="n">${total.toLocaleString('es-MX')}</span><span class="l">Total sep20–feb22</span></div>
+      </div>
+      <div class="spark-wrap">
+        <svg viewBox="0 0 ${w} ${h}"><polyline points="${pts}" fill="none" stroke="#CC0000" stroke-width="1.6"/></svg>
+        <div class="spark-caption">Evolución mensual sep 2020 – feb 2022</div>
+      </div>`;
+  }
+
+  const vTlRange = document.getElementById('vTlRange');
+  const vTlTitle = document.getElementById('vTlTitle');
+  vTlRange.max = STEPS-1;
+  vTlRange.value = vstep;
+  function setVStep(s){
+    vstep = s;
+    vTlRange.value = s;
+    vTlTitle.textContent = s===MONTHS.length ? 'Acumulado · sep 2020 – feb 2022' : ('Casos en ' + fmtMonth(MONTHS[s]));
+    document.getElementById('vTlNow').textContent = s===MONTHS.length ? 'Acumulado' : fmtMonth(MONTHS[s]);
+    restyleAll();
+    refreshTooltips();
+  }
+  vTlRange.addEventListener('input', e=> setVStep(+e.target.value));
+  document.getElementById('vTlFrom').textContent = fmtMonth(MONTHS[0]);
+  document.getElementById('vTlTo').textContent = fmtMonth(MONTHS[MONTHS.length-1]);
+
+  let vplaying=false, vtimer=null;
+  document.getElementById('vPlayBtn').addEventListener('click', function(){
+    vplaying = !vplaying;
+    if(vplaying){
+      this.textContent='⏸ Pausar';
+      let i=0; setVStep(0);
+      vtimer = setInterval(()=>{
+        i++;
+        if(i>=STEPS){ clearInterval(vtimer); vplaying=false; this.textContent='▶ Reproducir evolución'; return; }
+        setVStep(i);
+      }, 650);
+    } else {
+      clearInterval(vtimer);
+      this.textContent='▶ Reproducir evolución';
+    }
+  });
+
+  // custom zoom / reset controls (mirrors raster map controls, placed inside the map)
+  document.getElementById('vZoomIn').addEventListener('click', (e)=>{ e.stopPropagation(); map.zoomIn(); });
+  document.getElementById('vZoomOut').addEventListener('click', (e)=>{ e.stopPropagation(); map.zoomOut(); });
+  document.getElementById('vZoomReset').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    map.setView(initialView.center, initialView.zoom, {animate:true});
+    if(selectedLayer){ selectedLayer.setStyle(baseStyle(selectedLayer.feature)); selectedLayer=null; }
+    document.getElementById('infoCard').innerHTML = '<div class="info-empty">Haz clic en una colonia del mapa (o búscala) para ver su información aquí.</div>';
+  });
+  const vLegendFloat = document.getElementById('vLegendFloat');
+  document.getElementById('vLegendToggle').addEventListener('click', (e)=>{ e.stopPropagation(); vLegendFloat.classList.toggle('hidden'); });
+  document.getElementById('vLegendClose').addEventListener('click', (e)=>{ e.stopPropagation(); vLegendFloat.classList.add('hidden'); });
+
+  const vmapStageOuter = document.getElementById('vmapStageOuter');
+  document.getElementById('vFsToggle').addEventListener('click', (e)=>{
+    e.stopPropagation();
+    if(!document.fullscreenElement){
+      vmapStageOuter.requestFullscreen().catch(()=>{});
+    } else {
+      document.exitFullscreen();
+    }
+  });
+  document.addEventListener('fullscreenchange', ()=>{
+    setTimeout(()=> map.invalidateSize(), 120);
+  });
+
+  // search
+  const searchInput = document.getElementById('searchInput');
+  const searchResults = document.getElementById('searchResults');
+  const layersByKey = {};
+  geoLayer.eachLayer(l=> layersByKey[l.feature.properties.cveut]=l);
+  searchInput.addEventListener('input', ()=>{
+    const q = searchInput.value.trim().toUpperCase();
+    searchResults.innerHTML='';
+    if(q.length<2) return;
+    const matches = gj.features.filter(f=> f.properties.nomut.toUpperCase().includes(q)).slice(0,25);
+    matches.forEach(f=>{
+      const d = document.createElement('div');
+      d.textContent = f.properties.nomut + ' — ' + f.properties.nomdt;
+      d.addEventListener('click', ()=>{
+        const layer = layersByKey[f.properties.cveut];
+        if(!layer) return;
+        if(selectedLayer && selectedLayer!==layer) selectedLayer.setStyle(baseStyle(selectedLayer.feature));
+        selectedLayer = layer;
+        layer.setStyle(highlightStyle);
+        updateInfoCard(f);
+        map.setView(layer.getBounds().getCenter(), 13.5, {animate:true});
+        searchResults.innerHTML=''; searchInput.value = f.properties.nomut;
+      });
+      searchResults.appendChild(d);
+    });
+  });
+})();
+</script>
+</body>
+</html>
