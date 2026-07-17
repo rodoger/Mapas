@@ -447,10 +447,10 @@ button{font-family:inherit; cursor:pointer;}
   min-width:0;
 }
 .card-thumb img{
+  position:absolute;
+  inset:0;
   display:block;
   width:100%; height:100%; object-fit:cover;
-  min-width:0;
-  max-width:100%;
   transition:transform 0.3s ease;
 }
 .card:hover .card-thumb img{ transform:scale(1.045); }
@@ -634,8 +634,8 @@ button{font-family:inherit; cursor:pointer;}
   z-index:2;
 }
 .modal-close:hover{ background:rgba(14,42,53,0.16); }
-.modal-img-wrap{ background:var(--paper-dark); }
-.modal-img-wrap img{ width:100%; height:100%; object-fit:cover; }
+.modal-img-wrap{ position:relative; background:var(--paper-dark); min-height:220px; }
+.modal-img-wrap img{ position:absolute; inset:0; width:100%; height:100%; object-fit:cover; display:block; }
 .modal-body{ padding:34px 30px; }
 .modal-body h2{
   font-family:var(--display);
