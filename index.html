@@ -783,7 +783,7 @@ button{font-family:inherit; cursor:pointer;}
     <div class="hero-text">
       <p class="eyebrow">Archivo cartográfico &amp; documental</p>
       <h1>El territorio, <em>trazado</em>.</h1>
-      <p class="hero-lede">Mapas, rutas migratorias, cartografías del conflicto y documentos de investigación social, compendio producido por Rodolfo Gerardo Ortiz Morales.</p>
+      <p class="hero-lede">Mapas, rutas migratorias, cartografías del conflicto y documentos de investigación social, compendio producido por Rodolfo&nbsp;Gerardo&nbsp;Ortiz&nbsp;Morales.</p>
       <div class="hero-actions">
         <a href="#acervo" class="btn-primary">Explorar el compendio</a>
         <a href="#autor" class="btn-text">Sobre el autor →</a>
@@ -857,8 +857,9 @@ button{font-family:inherit; cursor:pointer;}
           <li>Licenciatura en Diseño Gráfico — SEP, México</li>
           <li>TSU en Proyectos Sociales — UnADM, México</li>
           <li>Especialización en Interpretación y Análisis de Iconografía e Iconología en el Arte — Universidad de Vitoria-Gasteiz EUNEIZ, País Vasco, España</li>
-          <li>Diplomatura en Narrativas Transmedia — CENART, México</li>
-          <li>Diplomatura en Docencia Universitaria — UNAM, México</li>
+          <li>Curso Sistemas de análisis para el desarrollo territorial, Centro Boliviano de Estudios Multidisciplinarios - Programa de Espacio y Territorio, La Paz, Bolivia</li>
+          <li>Curso Actualización en cartografía y geomática para profesores, Universidad Nacional Autónoma de México, Facultad de Ingeniera Facultad De Filosofía y Letras, Colegio de Geografía, México</li>
+			<li>Cursos de sistemas de información geográfica y estadística nacional, INEGI, Aguascalientes, México</li>
         </ul>
         <a class="author-mail" href="mailto:rgortiz@politicas.unam.mx">rgortiz@politicas.unam.mx</a>
       </div>
@@ -1102,7 +1103,7 @@ async function loadData(){
     const csvText = await res.text();
     const parsed = Papa.parse(csvText, { header: true, skipEmptyLines: true });
     RAW_DATA = parsed.data.filter(r => r.title && r.title.trim());
-    statusLine.textContent = `${RAW_DATA.length} recursos cargados desde Google Sheets.`;
+    statusLine.textContent = `${RAW_DATA.length} recursos cargados.`;
   } catch (err) {
     console.error(err);
     RAW_DATA = SAMPLE_DATA;
