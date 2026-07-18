@@ -301,6 +301,7 @@
   .chart-card .chart-sub{font-size:.78rem; color:#888; margin-bottom:14px;}
   .placeholder-note{
     font-size:.72rem; color:#999; margin-top:10px; border-top:1px dashed #ddd; padding-top:8px;
+    overflow-wrap:break-word; word-break:break-word;
   }
 
   /* cartogram */
@@ -355,7 +356,10 @@
     border-radius:var(--radius);
     padding:22px 26px;
     font-size:.85rem;
+    overflow-wrap:break-word;
+    word-break:break-word;
   }
+  .credits-card p{overflow-wrap:break-word; word-break:break-word;}
   .credits-card h3{margin-top:0; color:var(--oscuro); font-size:.95rem;}
 
   /* ---------- Recurso original ---------- */
@@ -431,7 +435,7 @@
   .spark-caption{font-size:.62rem; color:#999; margin-top:4px;}
 
   .tl-caption{display:flex; justify-content:space-between; font-size:.68rem; color:#888; padding:0 2px;}
-  .vmap-stats-note{font-size:.74rem; color:#777; margin-top:12px; line-height:1.5;}
+  .vmap-stats-note{font-size:.74rem; color:#777; margin-top:12px; line-height:1.5; overflow-wrap:break-word; word-break:break-word;}
   .vmap-stats-note b{color:var(--oscuro);}
 
   footer{
@@ -443,13 +447,52 @@
     .charts-row{grid-template-columns:1fr;}
   }
   @media (max-width: 640px){
-    #vmap{ height:460px; }
+    #vmap{ height:520px; }
     .vmap-search-float{ width:170px; }
     .vmap-info-float{ width:190px; font-size:.92em; }
   }
   @media (max-width: 520px){
     header.banner{border-radius:0 0 24px 24px; padding:24px 14px 28px;}
     .map-legend-float{width:168px; font-size:.9em;}
+  }
+  @media (max-width: 480px){
+    /* más espacio real para el mapa: se reduce el "colchón" de relleno alrededor */
+    section{padding:0 8px;}
+    .map-card, .vmap-card{padding:8px;}
+    #vmap{ height:78vh; min-height:420px; }
+
+    /* controles más compactos para que no tapen tanto el mapa */
+    .zbtn{width:26px; height:26px; font-size:13px;}
+    .map-zoom-controls{gap:4px; top:8px; right:8px;}
+    .north-arrow{top:8px; left:8px; width:26px; font-size:9px;}
+    .scale-bar{left:8px; bottom:92px; padding:3px 6px 1px; font-size:7.5px;}
+    .month-badge{right:8px; bottom:92px; padding:4px 10px; font-size:.72rem;}
+
+    /* leyendas flotantes más chicas y ancladas para no cubrir el centro del mapa */
+    .map-legend-float{top:150px; width:140px; padding:8px 10px;}
+    .map-legend-float h3{font-size:.68rem;}
+    .symbology-row{gap:4px;}
+    .vmap-legend-float{bottom:78px; width:150px; padding:8px 10px;}
+
+    .vmap-zoom-controls{top:8px; right:8px;}
+    .vmap-search-float{top:8px; left:8px; width:140px;}
+    .vmap-info-float{top:150px; right:8px; width:150px; padding:10px 12px; max-height:calc(100% - 160px);}
+
+    /* barra de tiempo más compacta dentro del mapa */
+    .map-timeline-float{padding:6px 10px 6px;}
+    .map-timeline-float .timeline-top{flex-wrap:nowrap;}
+    .map-timeline-float .timeline-title{
+      font-size:.64rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:56%;
+    }
+    .map-timeline-float .play-btn{
+      padding:4px 8px; font-size:.6rem; white-space:nowrap; flex-shrink:0;
+    }
+    .tl-labels{
+      font-size:.58rem; flex-wrap:nowrap; overflow-x:auto; -webkit-overflow-scrolling:touch;
+    }
+    .tl-labels span{white-space:nowrap; padding:2px 3px;}
+    .tl-caption{font-size:.58rem;}
+    input[type="range"].tl-range{margin:6px 0 3px;}
   }
 </style>
 </head>
@@ -547,9 +590,11 @@
           </div>
           <input type="range" min="0" max="6" step="1" value="6" class="tl-range" id="tlRange">
           <div class="tl-labels" id="tlLabels"></div>
-			<div class="tl-labels"> </br>Investigación y Cartografía: Rodolfo Gerardo Ortiz Morales, UnADM, TSU Proyectos Sociales. Fuentes estadísticas y cartográficas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx. Agosto 2020.</div>
         </div>
       </div>
+    </div>
+	  <div class="vmap-stats-note">
+      Investigación y Cartografía: Rodolfo Gerardo Ortiz Morales, UnADM. Fuente de casos: base mensual por colonia proporcionada para este proyecto. Fuentes estadísticas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx. Fuente de polígonos: marco geográfico (colonias CDMX) Instituto Electoral de la Ciudad de México IECM. Agosto 2020.
     </div>
   </div>
 </section>
@@ -564,9 +609,8 @@
       <div class="cg-legend">
         <span><span class="sw" style="background:#CC0000;"></span>Contagios acumulados</span>
         <span><span class="sw" style="background:#434343;"></span>Decesos acumulados</span>
-		  <span><span class="sw" style="background:#434343;">
       </div>
-		<div class="cg-legend">Visualización: Rodolfo Gerardo Ortiz Morales, UnADM, TSU Proyectos Sociales. Fuentes estadísticas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx. Agosto 2020.</div>
+      <div class="cg-legend" style="overflow-wrap:break-word; word-break:break-word;">Visualización: Rodolfo Gerardo Ortiz Morales, UnADM, TSU Proyectos Sociales. Fuentes estadísticas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx. Agosto 2020.</div>
     </div>
     <div class="chart-card">
       <h3>Ocupación de los contagiados</h3>
@@ -607,7 +651,7 @@
       </div>
 
       <div class="vmap-info-float" id="infoCard">
-        <div class="info-empty">Haz clic en una colonia del mapa (o búscala el espacio superior izquierdo del mapa) para ver su ficha informativa correspondiente. Arrastra la línea de tiempo (o pulsa ▶) para recorrer mes a mes.</div>
+        <div class="info-empty">Selecciona una coloquina en el mapa y aquí se verán los datos. Usa la línea de tiempo (o pulsa ▶) para ver los datos por mes.</div>
       </div>
 
       <div class="timeline map-timeline-float" id="vectorTimeline">
@@ -617,12 +661,11 @@
         </div>
         <input type="range" min="0" max="18" step="1" value="18" class="tl-range" id="vTlRange">
         <div class="tl-caption"><span id="vTlFrom">sep 2020</span><span id="vTlNow">Acumulado</span><span id="vTlTo">feb 2022</span></div>
-		  	<div class="vmap-stats-note">
-      <b>Cobertura de datos:</b> 1,725 de 1,814 colonias del marco geográfico cuentan con registros COVID (95%).</br> Investigación y Cartografía: Rodolfo Gerardo Ortiz Morales, UnADM, TSU Proyectos Sociales. Fuente de casos: base mensual por colonia proporcionada para este proyecto. Fuentes estadísticas: Gobierno de la Ciudad de México (2020). "Portal de datos de la Ciudad de México". https://datos.cdmx.gob.mx.Fuente de polígonos: marco geográfico (colonias CDMX) Instituto Electoral de la Ciudad de México IECM. Agosto 2025. </div>
       </div>
-	
     </div>
-   <!-- Aqui para poner texto debajo del mapa  -->
+    <div class="vmap-stats-note">
+      <b>Cobertura de datos:</b> 1,725 de 1,814 colonias del marco geográfico cuentan con registros COVID (95%).Investigación y Cartografía: Rodolfo Gerardo Ortiz Morales, UnADM. Fuentes estadísticas: Gobierno de la Ciudad de México (2020).<https://datos.cdmx.gob.mx>. Fuente de polígonos: Instituto Electoral de la Ciudad de México IECM. Agosto 2025.
+    </div>
   </div>
 </section>
 
@@ -832,6 +875,7 @@ document.getElementById('zoomReset').addEventListener('click', (e)=>{
   resetView();
 });
 const legendFloat = document.getElementById('legendFloat');
+if(window.matchMedia('(max-width: 480px)').matches){ legendFloat.classList.add('hidden'); }
 document.getElementById('legendToggle').addEventListener('click', (e)=>{
   e.stopPropagation();
   legendFloat.classList.toggle('hidden');
@@ -1167,6 +1211,7 @@ renderDonut();
     document.getElementById('infoCard').innerHTML = '<div class="info-empty">Haz clic en una colonia del mapa (o búscala) para ver su información aquí.</div>';
   });
   const vLegendFloat = document.getElementById('vLegendFloat');
+  if(window.matchMedia('(max-width: 480px)').matches){ vLegendFloat.classList.add('hidden'); }
   document.getElementById('vLegendToggle').addEventListener('click', (e)=>{ e.stopPropagation(); vLegendFloat.classList.toggle('hidden'); });
   document.getElementById('vLegendClose').addEventListener('click', (e)=>{ e.stopPropagation(); vLegendFloat.classList.add('hidden'); });
 
